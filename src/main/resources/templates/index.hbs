@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Users</title>
+</head>
+<body>
+    <h1>Users</h1>
+    <ul>
+        {{#each users}}
+            <li>{{name}} (id: {{id}})</li>
+        {{/each}}
+    </ul>
+
+    <form method="post" action="/add">
+        <input type="text" name="name" placeholder="New user name">
+        <button type="submit">Add</button>
+    </form>
+</body>
+</html>
