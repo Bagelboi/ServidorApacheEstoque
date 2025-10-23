@@ -1,0 +1,36 @@
+<h1>Lista de Cristais</h1>
+
+<a href="/cristais/new">Novo Cristal</a>
+<table border="1" cellpadding="5">
+    <thead>
+        <tr>
+            <th>SKU</th>
+            <th>EAN</th>
+            <th>Título</th>
+            <th>Estoque</th>
+            <th>Cor</th>
+            <th>Tamanho</th>
+            <th>Descrição</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#each cristais}}
+        <tr>
+            <td>{{sku}}</td>
+            <td>{{ean}}</td>
+            <td>{{titulo}}</td>
+            <td>{{estoque}}</td>
+            <td>{{cor}}</td>
+            <td>{{tamanho}}</td>
+            <td>{{descricao}}</td>
+            <td>
+                <a href="/cristais/edit/{{sku}}">Editar</a>
+                <form action="/cristais/delete/{{sku}}" method="post" style="display:inline;">
+                    <button type="submit" onclick="return confirm('Tem certeza que deseja excluir?')">Excluir</button>
+                </form>
+            </td>
+        </tr>
+        {{/each}}
+    </tbody>
+</table>

@@ -1,0 +1,3 @@
+-add datatables css to lists
+-full google sheets integration
+-paging system

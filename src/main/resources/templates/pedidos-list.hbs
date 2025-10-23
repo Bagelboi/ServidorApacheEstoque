@@ -1,0 +1,52 @@
+<h1>Lista de Pedidos</h1>
+
+<a href="/pedido/new">Novo Pedido</a>
+<table border="1" cellpadding="5">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Data</th>
+            <th>Cliente</th>
+            <th>Transporte</th>
+            <th>Pagamento</th>
+            <th>Nota Fiscal</th>
+            <th>Coleta</th>
+            <th>Valor</th>
+            <th>OC</th>
+            <th>Produtos</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#each pedidos}}
+        <tr>
+            <td>{{id}}</td>
+            <td>{{data}}</td>
+            <td>{{cliente}}</td>
+            <td>{{transporte}}</td>
+            <td>{{pagamento}}</td>
+            <td>{{nota_fiscal}}</td>
+            <td>{{coleta}}</td>
+            <td>R${{valor}}</td>
+            <td>{{OC}}</td>
+            <td>
+                {{#if produtos}}
+                    <ul>
+                        {{#each produtos}}
+                            <li>{{@key}}: {{this}}</li>
+                        {{/each}}
+                    </ul>
+                {{else}}
+                    <em>Sem produtos</em>
+                {{/if}}
+            </td>
+            <td>
+                <a href="/pedido/edit/{{id}}">Editar</a>
+                <form action="/pedido/delete/{{id}}" method="post" style="display:inline;">
+                    <button type="submit" onclick="return confirm('Tem certeza que deseja excluir o pedido {{id}}?')">Excluir</button>
+                </form>
+            </td>
+        </tr>
+        {{/each}}
+    </tbody>
+</table>

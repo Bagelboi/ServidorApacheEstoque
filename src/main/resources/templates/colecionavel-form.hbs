@@ -1,0 +1,27 @@
+<h1>{{buttonText}}</h1>
+
+<form action="{{action}}" method="{{method}}">
+    <label for="sku">SKU:</label>
+    <input type="text" id="sku" name="sku" value="{{colecionavel.sku}}" {{#if colecionavel}}readonly{{/if}} required>
+    <br>
+
+    <label for="ean">EAN:</label>
+    <input type="text" id="ean" name="ean" value="{{colecionavel.ean}}" required>
+    <br>
+
+    <label for="titulo">Título:</label>
+    <input type="text" id="titulo" name="titulo" value="{{colecionavel.titulo}}" required>
+    <br>
+
+    <label for="estoque">Estoque:</label>
+    <input type="number" id="estoque" name="estoque" value="{{colecionavel.estoque}}" min="0">
+    <br>
+
+    <label for="marca">Marca:</label>
+    <input type="marca" id="marca" name="marca" value="{{colecionavel.marca}}">
+    <br>
+
+    <button type="submit">{{buttonText}}</button>
+</form>
+
+<a href="/colecionaveis">Voltar à lista</a>

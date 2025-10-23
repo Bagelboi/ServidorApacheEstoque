@@ -33,7 +33,7 @@ public class oAuthAPI {
      */
     private static final List<String> SCOPES =
             Collections.singletonList(SheetsScopes.SPREADSHEETS);
-    private static final String CREDENTIALS_FILE_PATH = ConfigFactory.load().getString("app.sheets_credentials");
+    private static final String CREDENTIALS_FILE_PATH = ConfigFactory.load().getString("app.sheets.credentials");
     /**
      * Creates an authorized Credential object.
      *

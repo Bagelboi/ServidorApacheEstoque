@@ -1,0 +1,31 @@
+<h1>Lista de Colecionaveis</h1>
+
+<a href="/colecionaveis/new">Novo Colecionavel</a>
+<table border="1" cellpadding="5">
+    <thead>
+        <tr>
+            <th>SKU</th>
+            <th>EAN</th>
+            <th>Título</th>
+            <th>Estoque</th>
+            <th>Marca</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#each colecionaveis}}
+        <tr>
+            <td>{{sku}}</td>
+            <td>{{ean}}</td>
+            <td>{{titulo}}</td>
+            <td>{{estoque}}</td>
+            <td>{{marca}}</td>
+            <td>
+                <a href="/colecionaveis/edit/{{sku}}">Editar</a>
+                <form action="/colecionaveis/delete/{{sku}}" method="post" style="display:inline;">
+                    <button type="submit" onclick="return confirm('Tem certeza que deseja excluir?')">Excluir</button>
+                </form>
+            </td>
+        </tr>
+        {{/each}}
+    </tbody>
+</table>

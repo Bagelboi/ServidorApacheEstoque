@@ -1,8 +1,18 @@
 package org.dlpk.objects;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.dlpk.sheets.SheetsObj;
 
 @Data
-public class Produto {
+@NoArgsConstructor
+public class Produto implements SheetsObj {
+    String sku;
+    String ean;
+    String titulo;
+    Integer estoque;
 
+    public int getSheetsColumns() {
+        return 3;
+    }
 }
