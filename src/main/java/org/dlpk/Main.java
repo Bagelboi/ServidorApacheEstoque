@@ -8,9 +8,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import org.dlpk.sheets.GoogleSheetsService;
 import org.dlpk.sheets.oAuthAPI;
-import org.dlpk.spark.ColecionavelController;
-import org.dlpk.spark.CristalController;
-import org.dlpk.spark.PedidoController;
+import org.dlpk.spark.*;
 import org.jdbi.v3.core.Jdbi;
 import spark.ModelAndView;
 import spark.TemplateEngine;
@@ -35,9 +33,11 @@ public class Main {
             Map<String, Object> model = new HashMap<>();
             return new ModelAndView(model, "index.hbs");
         }, new HandlebarsTemplateEngine());
+        new ProdutoController().setupRoutes();
         new ColecionavelController().setupRoutes();
         new CristalController().setupRoutes();
-        new PedidoController().setupRoutes();
+        new RomaneioController().setupRoutes();
+        new EventoController().setupRoutes();
 
     }
 }

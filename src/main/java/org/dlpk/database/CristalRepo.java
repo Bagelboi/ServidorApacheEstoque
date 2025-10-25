@@ -12,7 +12,7 @@ import java.util.Optional;
 
 public interface CristalRepo {
 
-    @SqlUpdate("INSERT INTO Cristal (sku, ean, titulo, estoque, cor, tamanho, descricao) VALUES (:sku, :ean, :titulo, :estoque, :cor, :tamanho, :descricao)")
+    @SqlUpdate("INSERT INTO Cristal (sku, ean, titulo, estoque, cor, tamanho, descricao, peso) VALUES (:sku, :ean, :titulo, :estoque, :cor, :tamanho, :descricao, :peso)")
     void insert(@BindBean Cristal cristal);
 
     @SqlQuery("SELECT * FROM Cristal WHERE sku = :sku")
@@ -23,7 +23,7 @@ public interface CristalRepo {
     @RegisterBeanMapper(Cristal.class)
     List<Cristal> findAll();
 
-    @SqlUpdate("UPDATE Cristal SET ean = :ean, titulo = :titulo, estoque = :estoque, cor = :cor, tamanho = :tamanho, descricao = :descricao WHERE sku = :sku")
+    @SqlUpdate("UPDATE Cristal SET ean = :ean, titulo = :titulo, estoque = :estoque, cor = :cor, tamanho = :tamanho, descricao = :descricao, peso = :peso WHERE sku = :sku")
     void update(@BindBean Cristal cristal);
 
     @SqlUpdate("DELETE FROM Cristal WHERE sku = :sku")

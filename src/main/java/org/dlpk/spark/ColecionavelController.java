@@ -93,6 +93,7 @@ public class ColecionavelController {
     private Colecionavel extractColecionavel(Request req) {
         Colecionavel c = new Colecionavel();
         c.setSku("FU" + req.queryParams("sku"));
+        c.setPeso(Float.parseFloat(req.queryParams( "peso") ));
         c.setEan(req.queryParams("ean"));
         c.setTitulo(req.queryParams("titulo"));
         c.setEstoque(parseInt(req.queryParams("estoque")));

@@ -98,6 +98,7 @@ public class CristalController {
 
         c.setSku("CR" + req.queryParams("sku"));
         c.setEan(req.queryParams("ean"));
+        c.setPeso(Float.parseFloat(req.queryParams( "peso") ));
         c.setTitulo(req.queryParams("titulo"));
         c.setEstoque(parseInt(req.queryParams("estoque")));
         //below are non product fields

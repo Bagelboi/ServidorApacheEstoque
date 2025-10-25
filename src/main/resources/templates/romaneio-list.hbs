@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Romaneios</title>
+  <style>
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+    .actions form { display: inline; }
+    .btn { padding: 6px 10px; margin: 2px; }
+  </style>
+</head>
+<body>
+  <h1>Romaneios</h1>
+  <p><a href="/rom/new" class="btn">Novo Romaneio</a> <a href="/rom" class="btn">Voltar à lista</a></p>
+
+  {{!-- List view --}}
+  {{#if romaneios}}
+    <table>
+      <thead>
+        <tr>
+          <th>Nº Romaneio</th>
+          <th>Data</th>
+          <th>Destinatário</th>
+          <th>Preço Total</th>
+          <th>Lançado</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each romaneios}}
+          {{!-- each is a map with romaneio and precoTotal --}}
+          <tr>
+            <td>{{romaneio.numeroRomaneio}}</td>
+            <td>{{romaneio.dataEmissao}}</td>
+            <td>{{romaneio.destinatarioNome}}</td>
+            <td>{{precoTotal}}</td>
+            <td>{{#if romaneio.lancado}}Sim{{else}}Não{{/if}}</td>
+            <td class="actions">
+              <a class="btn" href="/rom/{{romaneio.numeroRomaneio}}">Mostrar mais</a>
+
+              {{#if romaneio.lancado}}
+                <form method="post" action="/rom/undo/{{romaneio.numeroRomaneio}}">
+                  <button class="btn" type="submit">Desfazer lançamento</button>
+                </form>
+              {{else}}
+                <form method="post" action="/rom/lancar/{{romaneio.numeroRomaneio}}">
+                  <button class="btn" type="submit">Lançar</button>
+                </form>
+                <a class="btn" href="/rom/update/{{romaneio.numeroRomaneio}}">Editar</a>
+              {{/if}}
+
+              <form method="post" action="/rom/delete/{{romaneio.numeroRomaneio}}" onsubmit="return confirm('Apagar romaneio {{romaneio.numeroRomaneio}} ?');">
+                <button class="btn" type="submit">Apagar</button>
+              </form>
+            </td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  {{/if}}
+
+  {{!-- Single detailed view (when model provides romaneio + produtosDetalhados) --}}
+  {{#if romaneio}}
+    <h2>Romaneio {{romaneio.numeroRomaneio}} - Detalhes</h2>
+    <p>
+      <strong>Data:</strong> {{romaneio.dataEmissao}}<br>
+      <strong>Destinatário:</strong> {{romaneio.destinatarioNome}}<br>
+      <strong>Documento:</strong> {{romaneio.destinatarioDocumento}}<br>
+      <strong>Contato:</strong> {{romaneio.contato}}<br>
+      <strong>Vendedor / OC / NF:</strong> {{romaneio.vendedor}} / {{romaneio.oc}} / {{romaneio.notaFiscal}}<br>
+      <strong>Observações:</strong> {{romaneio.observacoes}}
+    </p>
+
+    <h3>Produtos</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>SKU</th>
+          <th>Quantidade</th>
+          <th>Valor Unit.</th>
+          <th>Peso Unit.</th>
+          <th>Peso Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each produtosDetalhados}}
+          <tr>
+            <td>{{sku}}</td>
+            <td>{{quantidade}}</td>
+            <td>{{valor_unidade}}</td>
+            <td>{{peso_unitario}}</td>
+            <td>{{peso_total}}</td>
+          </tr>
+        {{/each}}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4"><strong>Peso total</strong></td>
+          <td><strong>{{pesoTotal}}</strong></td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <p>
+      <a class="btn" href="/rom">Voltar</a>
+      {{#if romaneio.lancado}}
+        <form method="post" action="/rom/undo/{{romaneio.numeroRomaneio}}" style="display:inline">
+          <button class="btn" type="submit">Desfazer lançamento</button>
+        </form>
+      {{else}}
+        <form method="post" action="/rom/lancar/{{romaneio.numeroRomaneio}}" style="display:inline">
+          <button class="btn" type="submit">Lançar</button>
+        </form>
+      {{/if}}
+    </p>
+  {{/if}}
+</body>
+</html>

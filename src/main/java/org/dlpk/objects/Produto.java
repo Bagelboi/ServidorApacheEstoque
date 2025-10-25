@@ -11,7 +11,7 @@ public class Produto implements SheetsObj {
     String ean;
     String titulo;
     Integer estoque;
-
+    Float peso;
     public int getSheetsColumns() {
         return 3;
     }
