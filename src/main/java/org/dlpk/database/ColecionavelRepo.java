@@ -19,6 +19,10 @@ public interface ColecionavelRepo {
     @RegisterBeanMapper(Colecionavel.class)
     Optional<Colecionavel> findBySku(@Bind("sku") String sku);
 
+    @SqlQuery("SELECT * FROM Colecionavel WHERE ean = :ean")
+    @RegisterBeanMapper(Colecionavel.class)
+    Optional<Colecionavel> findByEan(@Bind("ean") String ean);
+
     @SqlQuery("SELECT * FROM Colecionavel")
     @RegisterBeanMapper(Colecionavel.class)
     List<Colecionavel> findAll();

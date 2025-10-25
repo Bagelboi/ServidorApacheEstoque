@@ -34,9 +34,6 @@ public class EventoController {
                 return null; //produto não existe
 
             String dataStr = req.queryParams("data");
-            String tipoStr = req.queryParams("tipo");
-            String quantidadeStr = req.queryParams("quantidade");
-            String origem = req.queryParams("origem");
 
             // parse date, default to today if missing
             LocalDate data;
@@ -50,22 +47,15 @@ public class EventoController {
                 data = LocalDate.now();
             }
 
-            EVENTO_ESTOQUE tipo = EVENTO_ESTOQUE.valueOf(tipoStr);
-
-            Integer quantidade;
-            try {
-                quantidade = Integer.valueOf(quantidadeStr);
-            } catch (Exception e) {
-                quantidade = 0;
-            }
-
+            Integer quantidade = Integer.parseInt(req.queryParams("quantidade"));
+            EVENTO_ESTOQUE tipo = EVENTO_ESTOQUE.valueOf(req.queryParams("tipo"));
             // build event
             EventoEstoque evento = new EventoEstoque();
             evento.setSku(sku);
             evento.setData(data);
             evento.setTipo(tipo);
             evento.setQuantidade(quantidade);
-            evento.setOrigem(origem);
+            evento.setOrigem(req.queryParams("origem"));
 
                 int id = RepositorySingleton.jdbi.withExtension( EventoRepo.class, dao -> dao.insertEstoque(evento) );
                 evento.setId(id);

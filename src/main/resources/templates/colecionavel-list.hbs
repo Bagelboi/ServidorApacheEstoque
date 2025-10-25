@@ -1,5 +1,23 @@
 <h1>Lista de Colecionaveis</h1>
 
+<!-- CSV import form -->
+<form action="/colecionaveis/import" method="post" enctype="multipart/form-data" style="display:inline-block; margin-left:10px;">
+    <label for="csv-file" style="cursor:pointer; padding:6px 10px; background:#2d89ef; color:white; border-radius:4px;">
+        Importar CSV
+    </label>
+    <input id="csv-file" name="file" type="file" accept=".csv" style="display:none;" />
+    <button id="csv-submit" type="submit">Upload</button>
+    <small style="display:block; font-size:0.9em; margin-top:6px;">CSV cols: sku,ean,titulo,estoque,peso,marca</small>
+</form>
+
+<!-- Export button -->
+<br>
+<a href="/colecionaveis/export" style="padding:6px 10px; background:#28a745; color:white; border-radius:4px; text-decoration:none; margin-left:10px;">
+    Exportar CSV
+</a>
+
+<br>
+
 <a href="/colecionaveis/new">Novo Colecionavel</a>
 <table border="1" cellpadding="5">
     <thead>

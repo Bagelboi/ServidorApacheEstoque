@@ -3,22 +3,27 @@ package org.dlpk.spark;
 
 import static spark.Spark.*;
 
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
 import com.google.gson.Gson;
 import org.dlpk.database.ColecionavelRepo;
 import org.dlpk.database.CristalRepo;
 import org.dlpk.database.RepositorySingleton;
+import org.dlpk.objects.Colecionavel;
+import org.dlpk.objects.Cristal;
 import org.dlpk.objects.Produto;
+
+import javax.servlet.http.Part;
 
 public class ProdutoController {
 
     private final Gson gson = new Gson();
 
     public void setupRoutes() {
-        // Get produto by SKU
+                // Get produto by SKU
         get("/produto/:sku", (req, res) -> {
             String sku = req.params("sku");
             Optional<?> produto = findProduto(sku);
@@ -36,7 +41,6 @@ public class ProdutoController {
             res.type("application/json");
             return gson.toJson(model);
         });
-
     }
 
  
@@ -61,6 +65,19 @@ public class ProdutoController {
             return RepositorySingleton.jdbi.withExtension(CristalRepo.class, dao -> dao.findBySku(sku));
         }
         return Optional.empty();
+    }
+
+    public Optional<?> findProdutoByEAN(String EAN) {
+        if (EAN == null) return Optional.empty();
+
+        Optional<?> produto = Optional.empty();
+
+        if (!produto.isPresent())
+            produto = RepositorySingleton.jdbi.withExtension(ColecionavelRepo.class, dao -> dao.findByEan(EAN));
+        if (!produto.isPresent())
+            produto = RepositorySingleton.jdbi.withExtension(CristalRepo.class, dao -> dao.findBySku(EAN));
+
+        return produto;
     }
 
 }

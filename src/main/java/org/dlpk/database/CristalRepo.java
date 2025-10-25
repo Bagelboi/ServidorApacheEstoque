@@ -1,5 +1,6 @@
 package org.dlpk.database;
 
+import org.dlpk.objects.Colecionavel;
 import org.dlpk.objects.Cristal;
 import org.jdbi.v3.sqlobject.config.RegisterBeanMapper;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
@@ -18,6 +19,10 @@ public interface CristalRepo {
     @SqlQuery("SELECT * FROM Cristal WHERE sku = :sku")
     @RegisterBeanMapper(Cristal.class)
     Optional<Cristal> findBySku(@Bind("sku") String sku);
+
+    @SqlQuery("SELECT * FROM Cristal WHERE ean = :ean")
+    @RegisterBeanMapper(Cristal.class)
+    Optional<Cristal> findByEan(@Bind("ean") String ean);
 
     @SqlQuery("SELECT * FROM Cristal")
     @RegisterBeanMapper(Cristal.class)

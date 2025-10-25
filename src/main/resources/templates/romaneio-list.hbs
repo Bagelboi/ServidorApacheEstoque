@@ -1,3 +1,4 @@
+{{! filepath: c:\Users\donke\Desktop\Workshop\ServidorApacheEstoque\src\main\resources\templates\romaneio-list.hbs }}
 <!doctype html>
 <html>
 <head>
@@ -20,7 +21,8 @@
       <thead>
         <tr>
           <th>Nº Romaneio</th>
-          <th>Data</th>
+          <th>Data de Criação</th>
+          <th>Data de Emissão</th>
           <th>Destinatário</th>
           <th>Preço Total</th>
           <th>Lançado</th>
@@ -32,6 +34,7 @@
           {{!-- each is a map with romaneio and precoTotal --}}
           <tr>
             <td>{{romaneio.numeroRomaneio}}</td>
+            <td>{{romaneio.dataCriacao}}</td>
             <td>{{romaneio.dataEmissao}}</td>
             <td>{{romaneio.destinatarioNome}}</td>
             <td>{{precoTotal}}</td>
@@ -64,11 +67,13 @@
   {{#if romaneio}}
     <h2>Romaneio {{romaneio.numeroRomaneio}} - Detalhes</h2>
     <p>
-      <strong>Data:</strong> {{romaneio.dataEmissao}}<br>
+      <strong>Data de Criação:</strong> {{romaneio.dataCriacao}}<br>
+      <strong>Data de Emissão:</strong> {{romaneio.dataEmissao}}<br>
       <strong>Destinatário:</strong> {{romaneio.destinatarioNome}}<br>
       <strong>Documento:</strong> {{romaneio.destinatarioDocumento}}<br>
       <strong>Contato:</strong> {{romaneio.contato}}<br>
       <strong>Vendedor / OC / NF:</strong> {{romaneio.vendedor}} / {{romaneio.oc}} / {{romaneio.notaFiscal}}<br>
+      <strong>Transporte:</strong> {{romaneio.transporte}}<br>
       <strong>Observações:</strong> {{romaneio.observacoes}}
     </p>
 
@@ -79,6 +84,7 @@
           <th>SKU</th>
           <th>Quantidade</th>
           <th>Valor Unit.</th>
+          <th>Total (por Produto)</th>
           <th>Peso Unit.</th>
           <th>Peso Total</th>
         </tr>
@@ -89,6 +95,7 @@
             <td>{{sku}}</td>
             <td>{{quantidade}}</td>
             <td>{{valor_unidade}}</td>
+            <td>{{ valor_total_row }}</td>
             <td>{{peso_unitario}}</td>
             <td>{{peso_total}}</td>
           </tr>
@@ -97,7 +104,11 @@
       <tfoot>
         <tr>
           <td colspan="4"><strong>Peso total</strong></td>
-          <td><strong>{{pesoTotal}}</strong></td>
+          <td colspan="2"><strong>{{pesoTotal}}</strong></td>
+        </tr>
+        <tr>
+            <td colspan="4"><strong>Preço total</strong></td>
+            <td colspan="2"><strong>{{precoTotal}}</strong></td>
         </tr>
       </tfoot>
     </table>

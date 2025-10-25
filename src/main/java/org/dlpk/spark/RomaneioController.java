@@ -1,6 +1,7 @@
 // ...existing code...
 package org.dlpk.spark;
 
+import com.github.jknack.handlebars.Handlebars;
 import com.google.gson.Gson;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +10,7 @@ import org.dlpk.database.CristalRepo;
 import org.dlpk.database.EventoRepo;
 import org.dlpk.database.RomaneioRepo;
 import org.dlpk.database.RepositorySingleton;
+import org.dlpk.enums.TRANSPORTE;
 import org.dlpk.objects.EventoEstoque;
 import org.dlpk.objects.Produto;
 import org.dlpk.objects.Romaneio;
@@ -61,13 +63,15 @@ public class RomaneioController {
             // build detailed product rows with peso info
             List<Map<String, Object>> produtoRows = new ArrayList<>();
             float pesoTotal = 0f;
+            float precoTotal = 0f;
             if (rom.getProdutos() != null) {
                 for (RomaneioProduto p : rom.getProdutos()) {
                     Map<String, Object> row = new HashMap<>();
                     row.put("sku", p.getSku());
                     row.put("quantidade", p.getQuantidade());
                     row.put("valor_unidade", p.getValor_unidade());
-
+                    row.put("valor_total_row", p.getValor_unidade() * p.getQuantidade());
+                    precoTotal += p.getValor_unidade() * p.getQuantidade();
                     Optional<?> opt = produtoController.findProduto(p.getSku());
                     if (opt.isPresent()) {
                         Produto prod = (Produto) opt.get();
@@ -88,6 +92,7 @@ public class RomaneioController {
             model.put("romaneio", rom);
             model.put("produtosDetalhados", produtoRows);
             model.put("pesoTotal", pesoTotal);
+            model.put("precoTotal", precoTotal);
             return render(model, "romaneio-list.hbs");
         });
 
@@ -257,6 +262,7 @@ public class RomaneioController {
         r.setDescontoValorTotal(parseFloatOrNull(req.queryParams("descontoValorTotal")));
         r.setObservacoes(req.queryParams("observacoes"));
         r.setLancado(false);
+        r.setTransporte(TRANSPORTE.valueOf( req.queryParams("transporte") ) );
 
         // --- NEW: parse produtos from JSON ---
         String produtosJson = req.queryParams("produtosJson");
