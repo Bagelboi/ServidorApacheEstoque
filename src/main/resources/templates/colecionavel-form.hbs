@@ -17,9 +17,14 @@
     <input type="number" id="estoque" name="estoque" value="{{colecionavel.estoque}}" min="0" {{#if colecionavel}}readonly{{/if}}>
     <br>
 
-        <label for="peso">Peso:</label>
-        <input type="text" id="peso" name="peso" value="{{colecionavel.peso}}">
-        <br>
+
+    <label for="precoPadrao">Preço Padrão:</label>
+    <input type="text" id="precoPadrao" min="0" name="precoPadrao" value="{{colecionavel.precoPadrao}}">
+    <br>
+
+    <label for="peso">Peso:</label>
+    <input type="text" id="peso" name="peso" value="{{colecionavel.peso}}">
+    <br>
 
     <label for="marca">Marca:</label>
     <input type="marca" id="marca" name="marca" value="{{colecionavel.marca}}">

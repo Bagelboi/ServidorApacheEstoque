@@ -1,6 +1,6 @@
 package org.dlpk.database;
 
-import org.dlpk.objects.Colecionavel;
+
 import org.dlpk.objects.Cristal;
 import org.jdbi.v3.sqlobject.config.RegisterBeanMapper;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
@@ -13,8 +13,11 @@ import java.util.Optional;
 
 public interface CristalRepo {
 
-    @SqlUpdate("INSERT INTO Cristal (sku, ean, titulo, estoque, cor, tamanho, descricao, peso) VALUES (:sku, :ean, :titulo, :estoque, :cor, :tamanho, :descricao, :peso)")
+    @SqlUpdate("INSERT INTO Cristal (sku, ean, titulo, estoque, cor, tamanho, descricao, peso, precoPadrao) VALUES (:sku, :ean, :titulo, :estoque, :cor, :tamanho, :descricao, :peso, :precoPadrao)")
     void insert(@BindBean Cristal cristal);
+
+    @SqlUpdate("UPDATE Cristal SET ean = :ean, titulo = :titulo, estoque = :estoque, cor = :cor, tamanho = :tamanho, descricao = :descricao, peso = :peso, precoPadrao = :precoPadrao WHERE sku = :sku")
+    void update(@BindBean Cristal cristal);
 
     @SqlQuery("SELECT * FROM Cristal WHERE sku = :sku")
     @RegisterBeanMapper(Cristal.class)
@@ -28,14 +31,10 @@ public interface CristalRepo {
     @RegisterBeanMapper(Cristal.class)
     List<Cristal> findAll();
 
-    @SqlUpdate("UPDATE Cristal SET ean = :ean, titulo = :titulo, estoque = :estoque, cor = :cor, tamanho = :tamanho, descricao = :descricao, peso = :peso WHERE sku = :sku")
-    void update(@BindBean Cristal cristal);
-
     @SqlUpdate("DELETE FROM Cristal WHERE sku = :sku")
     void delete(@Bind("sku") String sku);
 
     @SqlUpdate("UPDATE Cristal SET estoque = estoque + :estoque WHERE sku = :sku")
     void updateEstoque(@Bind("sku") String sku, @Bind("estoque") Integer delta);
-
 
 }

@@ -111,6 +111,7 @@ public class CristalController {
         c.setCor(req.queryParams("cor"));
         c.setTamanho(req.queryParams("tamanho"));
         c.setDescricao(req.queryParams("descricao"));
+        c.setPrecoPadrao(Float.parseFloat(req.queryParams("precoPadrao")));
         return c;
     }
 

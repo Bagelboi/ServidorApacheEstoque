@@ -66,12 +66,24 @@ public class RomaneioController {
             float precoTotal = 0f;
             if (rom.getProdutos() != null) {
                 for (RomaneioProduto p : rom.getProdutos()) {
+                    // If valor_unidade is -1, try to fetch precoPadrao from Produto
+                    Float valorUnidade = p.getValor_unidade();
+                    if (valorUnidade != null && valorUnidade < 0.0f) {
+                        Optional<?> opt = produtoController.findProduto(p.getSku());
+                        if (opt.isPresent()) {
+                            Produto prod = (Produto) opt.get();
+                            if (prod.getPrecoPadrao() != null) {
+                                valorUnidade = prod.getPrecoPadrao();
+                                p.setValor_unidade(valorUnidade);
+                            }
+                        }
+                    }
                     Map<String, Object> row = new HashMap<>();
                     row.put("sku", p.getSku());
                     row.put("quantidade", p.getQuantidade());
-                    row.put("valor_unidade", p.getValor_unidade());
-                    row.put("valor_total_row", p.getValor_unidade() * p.getQuantidade());
-                    precoTotal += p.getValor_unidade() * p.getQuantidade();
+                    row.put("valor_unidade", valorUnidade);
+                    row.put("valor_total_row", valorUnidade * p.getQuantidade());
+                    precoTotal += valorUnidade * p.getQuantidade();
                     Optional<?> opt = produtoController.findProduto(p.getSku());
                     if (opt.isPresent()) {
                         Produto prod = (Produto) opt.get();
@@ -246,10 +258,8 @@ public class RomaneioController {
         String numStr = req.queryParams("numeroRomaneio");
         r.setNumeroRomaneio(parseIntOrNull(numStr));
 
-        String dataStr = req.queryParams("dataEmissao");
-        if (dataStr != null && !dataStr.isEmpty()) {
-            r.setDataEmissao(LocalDate.parse(dataStr));
-        }
+
+        r.setDataEmissao(LocalDate.now());
 
         r.setDestinatarioNome(req.queryParams("destinatarioNome"));
         r.setDestinatarioDocumento(req.queryParams("destinatarioDocumento"));

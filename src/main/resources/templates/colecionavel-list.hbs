@@ -28,6 +28,7 @@
             <th>Estoque</th>
             <th>Peso</th>
             <th>Marca</th>
+            <th>Preço Padrão</th>
         </tr>
     </thead>
     <tbody>
@@ -39,6 +40,7 @@
             <td>{{estoque}}</td>
             <td>{{peso}}g</td>
             <td>{{marca}}</td>
+            <td>{{precoPadrao}}</td>
             <td>
                 <a href="/colecionaveis/edit/{{sku}}">Editar</a>
                 <form action="/colecionaveis/delete/{{sku}}" method="post" style="display:inline;">

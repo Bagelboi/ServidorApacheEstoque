@@ -12,9 +12,6 @@ import java.util.Optional;
 
 public interface ColecionavelRepo {
 
-    @SqlUpdate("INSERT INTO Colecionavel (sku, ean, titulo, estoque, marca, peso) VALUES (:sku, :ean, :titulo, :estoque, :marca, :peso)")
-    void insert(@BindBean Colecionavel colecionavel);
-
     @SqlQuery("SELECT * FROM Colecionavel WHERE sku = :sku")
     @RegisterBeanMapper(Colecionavel.class)
     Optional<Colecionavel> findBySku(@Bind("sku") String sku);
@@ -27,8 +24,11 @@ public interface ColecionavelRepo {
     @RegisterBeanMapper(Colecionavel.class)
     List<Colecionavel> findAll();
 
-    @SqlUpdate("UPDATE Colecionavel SET ean = :ean, titulo = :titulo, estoque = :estoque, marca = :marca, peso = :peso WHERE sku = :sku")
-    void update(@BindBean Colecionavel colecionavel);
+        @SqlUpdate("INSERT INTO Colecionavel (sku, ean, titulo, estoque, marca, peso, precoPadrao) VALUES (:sku, :ean, :titulo, :estoque, :marca, :peso, :precoPadrao)")
+        void insert(@BindBean Colecionavel colecionavel);
+
+        @SqlUpdate("UPDATE Colecionavel SET ean = :ean, titulo = :titulo, estoque = :estoque, marca = :marca, peso = :peso, precoPadrao = :precoPadrao WHERE sku = :sku")
+        void update(@BindBean Colecionavel colecionavel);
 
     @SqlUpdate("DELETE FROM Colecionavel WHERE sku = :sku")
     void delete(@Bind("sku") String sku);

@@ -20,6 +20,8 @@ public class Produto implements SheetsObj {
     Integer estoque;
     @CsvBindByName
     Float peso;
+    @CsvBindByName
+    Float precoPadrao;
     public int getSheetsColumns() {
         return 3;
     }

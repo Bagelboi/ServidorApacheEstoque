@@ -79,6 +79,14 @@ public class EventoController {
             model.put("eventos", eventos);
             return new ModelAndView(model, "evento-estoque.hbs");
         }, new HandlebarsTemplateEngine());
+
+                // show form + list
+        get("/evento/conferencia", (req, res) -> {
+            Map<String, Object> model = new HashMap<>();
+            List<EventoEstoque> eventos = RepositorySingleton.jdbi.withExtension( EventoRepo.class, EventoRepo::findAllConferencia );
+            model.put("eventos", eventos);
+            return new ModelAndView(model, "evento-conferencia.hbs");
+        }, new HandlebarsTemplateEngine());
     }
 }
 // ...existing code...

@@ -35,6 +35,7 @@ public class ProdutoController {
                 model.put("nome", p.getTitulo());
                 model.put("estoque", p.getEstoque());
                 model.put("peso", p.getPeso());
+                model.put("precoPadrao", p.getPrecoPadrao());
             } else {
                 model.put("exists", false);
             }

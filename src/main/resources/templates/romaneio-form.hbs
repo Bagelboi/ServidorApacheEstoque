@@ -14,60 +14,7 @@
 <h1>{{buttonText}}</h1>
 
 <form id="romForm" method="post" action="{{action}}">
-    <label>Nº Romaneio
-        <input name="numeroRomaneio" type="number" value="{{romaneio.numeroRomaneio}}">
-    </label>
-
-    <label>Data emissão
-        <input name="dataEmissao" type="date" value="{{romaneio.dataEmissao}}">
-    </label>
-
-    <label>Destinatário (nome)
-        <input name="destinatarioNome" type="text" value="{{romaneio.destinatarioNome}}">
-    </label>
-
-    <label>Destinatário (documento)
-        <input name="destinatarioDocumento" type="text" value="{{romaneio.destinatarioDocumento}}">
-    </label>
-
-    <label>Contato
-        <input name="contato" type="text" value="{{romaneio.contato}}">
-    </label>
-
-    <label>Coleta
-        <input name="coleta" type="text" value="{{romaneio.coleta}}">
-    </label>
-
-    <label>Transporte:
-        <select name="transporte">
-            <option value="SEDEX">SEDEX</option>
-            <option value="JAMEF">Jamef</option>
-        </select>
-    </label>
-
-    <label>Vendedor
-        <input name="vendedor" type="text" value="{{romaneio.vendedor}}">
-    </label>
-
-    <label>OC
-        <input name="oc" type="text" value="{{romaneio.oc}}">
-    </label>
-
-    <label>Nota Fiscal
-        <input name="notaFiscal" type="number" value="{{romaneio.notaFiscal}}">
-    </label>
-
-    <label>Condição de pagamento
-        <input name="condPagamento" type="text" value="{{romaneio.condPagamento}}">
-    </label>
-
-    <label>Desconto valor total
-        <input name="descontoValorTotal" type="number" step="0.01" value="{{romaneio.descontoValorTotal}}">
-    </label>
-
-    <label>Observações
-        <textarea name="observacoes">{{romaneio.observacoes}}</textarea>
-    </label>
+    <!-- ... existing fields ... -->
 
     <h3>Produtos</h3>
 
@@ -95,8 +42,14 @@
     <p>
         <input id="newSku" placeholder="SKU (ex: FU123)" type="text">
         <input id="newQuant" placeholder="Quantidade" type="number" value="1" min="1">
-        <input id="newValor" placeholder="Valor unit." type="number" step="0.01" value="0.00">
+        <input id="newValor" placeholder="Valor unit." type="number" step="0.01" value="-1.00">
         <button id="addProduto" type="button" class="btn">Adicionar produto</button>
+    </p>
+
+    <!-- Import CSV Button -->
+    <p>
+        <input type="file" id="csvFile" accept=".csv" style="display:none">
+        <button id="importCsvBtn" type="button" class="btn">Importar Produtos em Massa (sku, quantidade, valor)</button>
     </p>
 
     <!-- Hidden input to submit JSON of produtos -->
@@ -114,23 +67,43 @@
     }
 
     document.getElementById('addProduto').addEventListener('click', function() {
-      var sku = document.getElementById('newSku').value.trim();
-      if (!sku) { alert('Informe um SKU.'); return; }
-      var quant = parseInt(document.getElementById('newQuant').value, 10) || 0;
-      var valor = parseFloat(document.getElementById('newValor').value) || 0.0;
+        var sku = document.getElementById('newSku').value.trim();
+        if (!sku) { alert('Informe um SKU.'); return; }
+        var quant = parseInt(document.getElementById('newQuant').value, 10) || 0;
+        var valor = parseFloat(document.getElementById('newValor').value);
+        if (isNaN(valor)) valor = 0.0;
 
-      // Optionally warn if SKU format is unusual
-      if (!/^(FU|CR)/.test(sku)) {
-        if (!confirm('SKU não parece ser FU/CR. Deseja adicionar mesmo assim?')) return;
-      }
+        if (!/^(FU|CR)/.test(sku)) {
+            if (!confirm('SKU não parece ser FU/CR. Deseja adicionar mesmo assim?')) return;
+        }
 
-      addProdutoRow(sku, quant, valor);
+        fetchAndAddProduto(sku, quant, valor);
     });
+
+    function fetchAndAddProduto(sku, quant, valor) {
+        fetch(`/produto/${sku}`)
+            .then(resp => {
+                if (!resp.ok) throw new Error('Produto não encontrado');
+                return resp.json();
+            })
+            .then(prod => {
+                if (!prod) return;
+
+                if (valor < 0) {
+                    if (prod.precoPadrao != null) valor = prod.precoPadrao;
+                    else alert('Preço padrão não encontrado para este SKU. Usando -1.');
+                }
+                addProdutoRow(sku, quant, valor);
+            })
+            .catch(() => {
+                // Skip silently if SKU starts with FU or CR
+                if (/^(FU|CR)/.test(sku)) return;
+                alert(`Produto ${sku} não encontrado no banco de dados.`);
+            });
+    }
 
     function addProdutoRow(sku, quant, valor) {
       var tbody = document.querySelector('#produtosTable tbody');
-
-      // Remove existing row with same SKU
       var existing = tbody.querySelector(`tr[data-sku="${sku}"]`);
       if (existing) existing.remove();
 
@@ -143,13 +116,38 @@
         <td><button type="button" onclick="removeRow(this)">Remover</button></td>
       `;
       tbody.appendChild(tr);
-
-      document.getElementById('newSku').value = '';
-      document.getElementById('newQuant').value = '1';
-      document.getElementById('newValor').value = '0.00';
     }
 
-    // Serialize table to JSON before submitting form
+    // --- CSV Import Logic ---
+    const importBtn = document.getElementById('importCsvBtn');
+    const csvInput = document.getElementById('csvFile');
+
+    importBtn.addEventListener('click', () => csvInput.click());
+
+    csvInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const lines = e.target.result.split(/\r?\n/).filter(l => l.trim().length > 0);
+            for (let line of lines) {
+                const parts = line.split(',').map(p => p.trim());
+                if (parts.length < 3) continue;
+
+                const sku = parts[0];
+                const quant = parseInt(parts[1], 10) || 0;
+                const valor = parseFloat(parts[2]) || -1.0;
+
+                if (!sku) continue;
+                fetchAndAddProduto(sku, quant, valor);
+            }
+        };
+        reader.readAsText(file, 'UTF-8');
+        this.value = ''; // Reset for future imports
+    });
+
+    // --- Form Submit ---
     document.getElementById('romForm').addEventListener('submit', function(e) {
       var produtos = [];
       document.querySelectorAll('#produtosTable tbody tr').forEach(tr => {

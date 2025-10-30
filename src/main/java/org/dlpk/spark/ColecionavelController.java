@@ -15,6 +15,7 @@ import spark.template.handlebars.HandlebarsTemplateEngine;
 
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.http.Part;
+import javax.swing.text.html.Option;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Reader;
@@ -37,6 +38,11 @@ public class ColecionavelController {
             model.put("method", "post");
             model.put("buttonText", "Criar Colecionável");
             return render(model, "colecionavel-form.hbs");
+        });
+
+        get("colecionaveis/getByEan", (req, res) -> {
+            String ean = req.queryParams("ean");
+            Optional<Colecionavel> colecionavel = RepositorySingleton.jdbi.withExtension(ColecionavelRepo.class
         });
 
         post("/colecionaveis/import", (req, res) -> {
@@ -186,6 +192,7 @@ public class ColecionavelController {
         c.setTitulo(req.queryParams("titulo"));
         c.setEstoque(parseInt(req.queryParams("estoque")));
         c.setMarca(req.queryParams("marca"));
+        c.setPrecoPadrao(parseFloat(req.queryParams("precoPadrao")));
         return c;
     }
 
