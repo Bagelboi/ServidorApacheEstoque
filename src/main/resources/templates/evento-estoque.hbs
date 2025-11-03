@@ -1,58 +1,134 @@
 {{! ...existing code... }}
 <h2>Criar Evento de Estoque</h2>
 <form method="post" action="/evento/estoque/new">
-  <div>
-    <label>SKU:</label>
-    <input name="sku" type="text" required />
-  </div>
-  <div>
-    <label>Data:</label>
-    <input name="data" type="date" />
-    <small>(se vazio, usa hoje)</small>
-  </div>
-  <div>
-    <label>Tipo:</label>
-    <select name="tipo">
-      <option value="ADICAO">ADICAO</option>
-      <option value="DEDUCAO">DEDUCAO</option>
-    </select>
-  </div>
-  <div>
-    <label>Quantidade:</label>
-    <input name="quantidade" type="number" value="0" required />
-  </div>
-  <div>
-    <label>Origem:</label>
-    <input name="origem" type="text" />
-  </div>
-  <div>
-    <button type="submit">Criar Evento</button>
-  </div>
+    <div>
+        <label>SKU:</label>
+        <input name="sku" type="text" required />
+    </div>
+    <div>
+        <label>Data:</label>
+        <input name="data" type="date" />
+        <small>(se vazio, usa hoje)</small>
+    </div>
+    <div>
+        <label>Tipo:</label>
+        <select name="tipo">
+            <option value="ADICAO">ADICAO</option>
+            <option value="DEDUCAO">DEDUCAO</option>
+        </select>
+    </div>
+    <div>
+        <label>Quantidade:</label>
+        <input name="quantidade" type="number" value="0" required />
+    </div>
+    <div>
+        <label>Origem:</label>
+        <input name="origem" type="text" />
+    </div>
+    <div>
+        <button type="submit">Criar Evento</button>
+    </div>
 </form>
+
+<hr />
+
+<h2>Importar CSV de Eventos</h2>
+<input type="file" id="csvFile" accept=".csv" />
+<button id="importCsvBtn">Importar CSV</button>
+<p id="importStatus"></p>
+
+<script>
+    document.getElementById('importCsvBtn').addEventListener('click', async () => {
+      const fileInput = document.getElementById('csvFile');
+      const status = document.getElementById('importStatus');
+      if (!fileInput.files.length) {
+        alert('Selecione um arquivo CSV primeiro.');
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const text = await file.text();
+
+      // Try both commas and semicolons as delimiters
+      const delimiter = text.includes(';') ? ';' : ',';
+      const rows = text.trim().split(/\r?\n/).map(r => r.split(delimiter).map(c => c.trim()));
+
+      if (rows.length < 2) {
+        alert('O arquivo CSV parece vazio ou inválido.');
+        return;
+      }
+
+      const header = rows[0].map(h => h.toLowerCase());
+      const today = new Date().toISOString().split('T')[0];
+      let successCount = 0;
+      let failCount = 0;
+
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const get = (name) => {
+          const idx = header.indexOf(name);
+          return idx >= 0 ? row[idx] : '';
+        };
+
+        const evento = {
+          sku: get('sku'),
+          data: get('data') || today,
+          tipo: (get('tipo') || 'ADICAO').toUpperCase(),
+          quantidade: parseInt(get('quantidade') || '0'),
+          origem: get('origem')
+        };
+
+        if (!evento.sku) continue; // skip invalid lines
+
+        try {
+            const formData = new URLSearchParams();
+            for (const key in evento) {
+              formData.append(key, evento[key]);
+            }
+
+            await fetch('/evento/estoque/new', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: formData
+            });
+          if (res.ok) successCount++;
+          else failCount++;
+        } catch (e) {
+          failCount++;
+        }
+      }
+
+      status.textContent = `Importação concluída: ${successCount} sucesso(s), ${failCount} falha(s).`;
+      alert(status.textContent);
+      location.reload();
+    });
+</script>
+
+<hr />
 
 <h2>Eventos de Estoque</h2>
 <table border="1" cellpadding="4" cellspacing="0">
-  <thead>
+    <thead>
     <tr>
-      <th>ID</th>
-      <th>SKU</th>
-      <th>Data</th>
-      <th>Tipo</th>
-      <th>Quantidade</th>
-      <th>Origem</th>
+        <th>ID</th>
+        <th>SKU</th>
+        <th>Data</th>
+        <th>Tipo</th>
+        <th>Quantidade</th>
+        <th>Origem</th>
     </tr>
-  </thead>
-  <tbody>
+    </thead>
+    <tbody>
     {{#each eventos}}
-      <tr>
-        <td>{{id}}</td>
-        <td>{{sku}}</td>
-        <td>{{data}}</td>
-        <td>{{tipo}}</td>
-        <td>{{quantidade}}</td>
-        <td>{{origem}}</td>
-      </tr>
+        <tr>
+            <td>{{id}}</td>
+            <td>{{sku}}</td>
+            <td>{{data}}</td>
+            <td>{{tipo}}</td>
+            <td>{{quantidade}}</td>
+            <td>{{origem}}</td>
+        </tr>
     {{/each}}
-  </tbody>
+    </tbody>
 </table>
 {{! ...existing code... }}

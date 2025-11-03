@@ -36,5 +36,8 @@ public interface ColecionavelRepo {
     @SqlUpdate("UPDATE Colecionavel SET estoque = estoque + :estoque WHERE sku = :sku")
     void updateEstoque(@Bind("sku") String sku, @Bind("estoque") Integer delta);
 
+    @SqlUpdate("UPDATE Colecionavel SET ean = :ean WHERE sku = :sku")
+    void updateEAN(@Bind("sku") String sku, @Bind("ean") String ean);
+
 
 }

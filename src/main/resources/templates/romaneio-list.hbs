@@ -82,6 +82,7 @@
       <thead>
         <tr>
           <th>SKU</th>
+            <th>EAN</th>
           <th>Quantidade</th>
           <th>Valor Unit.</th>
           <th>Total (por Produto)</th>
@@ -93,6 +94,7 @@
         {{#each produtosDetalhados}}
           <tr>
             <td>{{sku}}</td>
+              <td>{{ean}}</td>
             <td>{{quantidade}}</td>
             <td>{{valor_unidade}}</td>
             <td>{{ valor_total_row }}</td>

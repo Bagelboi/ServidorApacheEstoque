@@ -1,0 +1,58 @@
+{{! ...existing code... }}
+<h2>Criar Evento de Estoque</h2>
+<form method="post" action="/evento/estoque/new">
+  <div>
+    <label>SKU:</label>
+    <input name="sku" type="text" required />
+  </div>
+  <div>
+    <label>Data:</label>
+    <input name="data" type="date" />
+    <small>(se vazio, usa hoje)</small>
+  </div>
+  <div>
+    <label>Tipo:</label>
+    <select name="tipo">
+      <option value="ADICAO">ADICAO</option>
+      <option value="DEDUCAO">DEDUCAO</option>
+    </select>
+  </div>
+  <div>
+    <label>Quantidade:</label>
+    <input name="quantidade" type="number" value="0" required />
+  </div>
+  <div>
+    <label>Origem:</label>
+    <input name="origem" type="text" />
+  </div>
+  <div>
+    <button type="submit">Criar Evento</button>
+  </div>
+</form>
+
+<h2>Eventos de Estoque</h2>
+<table border="1" cellpadding="4" cellspacing="0">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>SKU</th>
+      <th>Data</th>
+      <th>Tipo</th>
+      <th>Quantidade</th>
+      <th>Origem</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each eventos}}
+      <tr>
+        <td>{{id}}</td>
+        <td>{{sku}}</td>
+        <td>{{data}}</td>
+        <td>{{tipo}}</td>
+        <td>{{quantidade}}</td>
+        <td>{{origem}}</td>
+      </tr>
+    {{/each}}
+  </tbody>
+</table>
+{{! ...existing code... }}

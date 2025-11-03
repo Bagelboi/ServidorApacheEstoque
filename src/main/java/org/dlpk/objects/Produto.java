@@ -1,5 +1,6 @@
 package org.dlpk.objects;
 
+import com.google.gson.Gson;
 import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvBindByPosition;
 import lombok.Data;

@@ -1,5 +1,6 @@
 package org.dlpk.database;
 
+import org.dlpk.objects.EventoConferencia;
 import org.dlpk.objects.EventoEstoque;
 import org.jdbi.v3.sqlobject.config.RegisterBeanMapper;
 import org.jdbi.v3.sqlobject.customizer.Bind;
@@ -34,21 +35,21 @@ public interface EventoRepo {
     // evento conferencia
     @SqlUpdate("INSERT INTO evento_conferencia (sku, data, estoque_novo, origem) VALUES (:sku, :data, :estoque_novo, :origem)")
     @GetGeneratedKeys
-    int insertConferencia(@BindBean org.dlpk.objects.EventoConferencia evento);
+    int insertConferencia(@BindBean EventoConferencia evento);
 
     @SqlQuery("SELECT * FROM evento_conferencia WHERE id = :id")
-    @RegisterBeanMapper(org.dlpk.objects.EventoConferencia.class)
-    org.dlpk.objects.EventoConferencia findByIdConferencia(@Bind("id") Integer id);
+    @RegisterBeanMapper(EventoConferencia.class)
+    EventoConferencia findByIdConferencia(@Bind("id") Integer id);
 
     @SqlQuery("SELECT * FROM evento_conferencia WHERE sku = :sku")
-    @RegisterBeanMapper(org.dlpk.objects.EventoConferencia.class)
-    List<org.dlpk.objects.EventoConferencia> findAllBySkuConferencia(@Bind("sku") String sku);
+    @RegisterBeanMapper(EventoConferencia.class)
+    List<EventoConferencia> findAllBySkuConferencia(@Bind("sku") String sku);
 
     @SqlQuery("SELECT * FROM evento_conferencia")
-    @RegisterBeanMapper(org.dlpk.objects.EventoConferencia.class)
-    List<org.dlpk.objects.EventoConferencia> findAllConferencia();
+    @RegisterBeanMapper(EventoConferencia.class)
+    List<EventoConferencia> findAllConferencia();
 
     @SqlQuery("SELECT * FROM evento_conferencia WHERE origem = :org")
-    @RegisterBeanMapper(org.dlpk.objects.EventoConferencia.class)
-    List<org.dlpk.objects.EventoConferencia> findAllByOrigemConferencia(@Bind("org") String origem);
+    @RegisterBeanMapper(EventoConferencia.class)
+    List<EventoConferencia> findAllByOrigemConferencia(@Bind("org") String origem);
 }

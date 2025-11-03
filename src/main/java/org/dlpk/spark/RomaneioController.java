@@ -80,6 +80,7 @@ public class RomaneioController {
                     }
                     Map<String, Object> row = new HashMap<>();
                     row.put("sku", p.getSku());
+                    row.put("ean", produtoController.getProdutoEAN(p.getSku()));
                     row.put("quantidade", p.getQuantidade());
                     row.put("valor_unidade", valorUnidade);
                     row.put("valor_total_row", valorUnidade * p.getQuantidade());
@@ -173,12 +174,21 @@ public class RomaneioController {
 
             Integer id = rom.getId();
             rom = RepositorySingleton.jdbi.withExtension(RomaneioRepo.class, dao -> dao.getRomaneioWithProdutos(id));
-
+            List<Map<String, Object>> produtosComEan = new ArrayList<>();
+            for (RomaneioProduto p : rom.getProdutos()) {
+                Map<String, Object> produtoMap = new HashMap<>();
+                produtoMap.put("quantidade", p.getQuantidade());
+                produtoMap.put("sku", p.getSku());
+                produtoMap.put("valor_unidade", p.getValor_unidade());
+                produtoMap.put("ean", produtoController.getProdutoEAN(p.getSku()));
+                produtosComEan.add(produtoMap);
+            }
             Map<String, Object> model = new HashMap<>();
             model.put("action", "/rom/update/" + numero);
             model.put("method", "post");
             model.put("buttonText", "Atualizar Romaneio");
             model.put("romaneio", rom); // prefill form with existing rom data
+            model.put("romaneioProdutosEAN", produtosComEan);
             return render(model, "romaneio-form.hbs");
         });
 
@@ -290,6 +300,7 @@ public class RomaneioController {
 
         return r;
     }
+
 
     private Integer parseIntOrNull(String s) {
         try {

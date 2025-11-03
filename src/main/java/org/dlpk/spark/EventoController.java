@@ -1,12 +1,15 @@
 // ...existing code...
 package org.dlpk.spark;
 
+import com.google.gson.Gson;
 import org.dlpk.database.EventoRepo;
 import org.dlpk.database.RepositorySingleton;
+import org.dlpk.objects.EventoConferencia;
 import org.dlpk.objects.EventoEstoque;
 import org.dlpk.enums.EVENTO_ESTOQUE;
 import org.jdbi.v3.core.Jdbi;
 import spark.ModelAndView;
+import spark.Request;
 import spark.template.handlebars.HandlebarsTemplateEngine;
 
 import java.sql.Date;
@@ -83,10 +86,43 @@ public class EventoController {
                 // show form + list
         get("/evento/conferencia", (req, res) -> {
             Map<String, Object> model = new HashMap<>();
-            List<EventoEstoque> eventos = RepositorySingleton.jdbi.withExtension( EventoRepo.class, EventoRepo::findAllConferencia );
+            List<EventoConferencia> eventos = RepositorySingleton.jdbi.withExtension( EventoRepo.class, EventoRepo::findAllConferencia );
             model.put("eventos", eventos);
             return new ModelAndView(model, "evento-conferencia.hbs");
         }, new HandlebarsTemplateEngine());
+
+        // POST for EventoConferencia
+        post("/evento/conferencia/new", (req, res) -> {
+            // Parse JSON body
+            Gson gson = new Gson();
+            EventoConferenciaInput input = gson.fromJson(req.body(), EventoConferenciaInput.class);
+
+            // Validate SKU exists
+            if (!produtoController.findProduto(input.sku).isPresent())
+                return ""; // Produto não existe
+
+            EventoConferencia evento = new EventoConferencia();
+            evento.setSku(input.sku);
+            evento.setData(LocalDate.now());
+            evento.setEstoque_novo(input.estoque_novo);
+            evento.setOrigem(input.origem);
+
+            // Save to DB
+            int id = RepositorySingleton.jdbi.withExtension(EventoRepo.class, dao -> dao.insertConferencia(evento));
+            evento.setId(id);
+
+            produtoController.addEstoque(input.sku, input.estoque_novo - input.estoque_velho);
+
+            return null; // No redirect here
+        });
+    }
+
+    // Helper class for JSON input
+    private static class EventoConferenciaInput {
+        String sku;
+        int estoque_novo;
+        int estoque_velho;
+        String origem;
     }
 }
 // ...existing code...

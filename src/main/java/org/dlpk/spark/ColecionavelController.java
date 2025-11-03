@@ -1,5 +1,6 @@
 package org.dlpk.spark;
 
+import com.google.gson.Gson;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.bean.HeaderColumnNameMappingStrategy;
 import com.opencsv.bean.StatefulBeanToCsv;
@@ -9,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.dlpk.database.ColecionavelRepo;
 import org.dlpk.database.RepositorySingleton;
 import org.dlpk.objects.Colecionavel;
+import org.dlpk.objects.Produto;
 import spark.ModelAndView;
 import spark.Request;
 import spark.template.handlebars.HandlebarsTemplateEngine;
@@ -28,7 +30,7 @@ import static spark.Spark.*;
 
 @RequiredArgsConstructor
 public class ColecionavelController {
-
+    private final Gson gson = new Gson();
     public void setupRoutes() {
 
         // Show creation form
@@ -40,9 +42,16 @@ public class ColecionavelController {
             return render(model, "colecionavel-form.hbs");
         });
 
-        get("colecionaveis/getByEan", (req, res) -> {
+        get("colecionaveis/getSkuFromEAN/:ean", (req, res) -> {
             String ean = req.queryParams("ean");
-            Optional<Colecionavel> colecionavel = RepositorySingleton.jdbi.withExtension(ColecionavelRepo.class
+            String ean_to_sku = ean.substring(ean.length() - 6, ean.length() - 1);
+            Optional<Colecionavel> colecionavel = RepositorySingleton.jdbi.withExtension(ColecionavelRepo.class, dao -> dao.findBySku(ean_to_sku));
+            if (colecionavel.isPresent()) {
+                RepositorySingleton.jdbi.useExtension(ColecionavelRepo.class, dao -> dao.updateEAN(ean_to_sku, ean)); //atualiza ean qualquer caso
+                return ean_to_sku;
+            }
+            res.status(400);
+            return "";
         });
 
         post("/colecionaveis/import", (req, res) -> {

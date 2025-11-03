@@ -1,0 +1,164 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Formulário Romaneio</title>
+    <style>
+        label { display:block; margin-top:8px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+        th, td { border: 1px solid #ccc; padding: 6px; }
+        .btn { padding: 6px 10px; margin: 4px; }
+    </style>
+</head>
+<body>
+<h1>{{buttonText}}</h1>
+
+<form id="romForm" method="post" action="{{action}}">
+    <!-- ... existing fields ... -->
+
+    <h3>Produtos</h3>
+
+    <table id="produtosTable">
+        <thead>
+        <tr>
+            <th>SKU</th>
+            <th>Quantidade</th>
+            <th>Valor unidade</th>
+            <th>Remover</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{#each romaneio.produtos}}
+            <tr data-sku="{{sku}}">
+                <td>{{sku}}</td>
+                <td><input type="number" value="{{quantidade}}" min="1"></td>
+                <td><input type="number" step="0.01" value="{{valor_unidade}}"></td>
+                <td><button type="button" onclick="removeRow(this)">Remover</button></td>
+            </tr>
+        {{/each}}
+        </tbody>
+    </table>
+
+    <p>
+        <input id="newSku" placeholder="SKU (ex: FU123)" type="text">
+        <input id="newQuant" placeholder="Quantidade" type="number" value="1" min="1">
+        <input id="newValor" placeholder="Valor unit." type="number" step="0.01" value="-1.00">
+        <button id="addProduto" type="button" class="btn">Adicionar produto</button>
+    </p>
+
+    <!-- Import CSV Button -->
+    <p>
+        <input type="file" id="csvFile" accept=".csv" style="display:none">
+        <button id="importCsvBtn" type="button" class="btn">Importar Produtos em Massa (sku, quantidade, valor)</button>
+    </p>
+
+    <!-- Hidden input to submit JSON of produtos -->
+    <input type="hidden" name="produtosJson" id="produtosJson">
+
+    <p>
+        <button type="submit" class="btn">{{buttonText}}</button>
+        <a class="btn" href="/rom">Cancelar</a>
+    </p>
+</form>
+
+<script>
+    function removeRow(btn) {
+      btn.closest('tr').remove();
+    }
+
+    document.getElementById('addProduto').addEventListener('click', function() {
+        var sku = document.getElementById('newSku').value.trim();
+        if (!sku) { alert('Informe um SKU.'); return; }
+        var quant = parseInt(document.getElementById('newQuant').value, 10) || 0;
+        var valor = parseFloat(document.getElementById('newValor').value);
+        if (isNaN(valor)) valor = 0.0;
+
+        if (!/^(FU|CR)/.test(sku)) {
+            if (!confirm('SKU não parece ser FU/CR. Deseja adicionar mesmo assim?')) return;
+        }
+
+        fetchAndAddProduto(sku, quant, valor);
+    });
+
+    function fetchAndAddProduto(sku, quant, valor) {
+        fetch(`/produto/${sku}`)
+            .then(resp => {
+                if (!resp.ok) throw new Error('Produto não encontrado');
+                return resp.json();
+            })
+            .then(prod => {
+                if (!prod) return;
+
+                if (valor < 0) {
+                    if (prod.precoPadrao != null) valor = prod.precoPadrao;
+                    else alert('Preço padrão não encontrado para este SKU. Usando -1.');
+                }
+                addProdutoRow(sku, quant, valor);
+            })
+            .catch(() => {
+                // Skip silently if SKU starts with FU or CR
+                if (/^(FU|CR)/.test(sku)) return;
+                alert(`Produto ${sku} não encontrado no banco de dados.`);
+            });
+    }
+
+    function addProdutoRow(sku, quant, valor) {
+      var tbody = document.querySelector('#produtosTable tbody');
+      var existing = tbody.querySelector(`tr[data-sku="${sku}"]`);
+      if (existing) existing.remove();
+
+      var tr = document.createElement('tr');
+      tr.setAttribute('data-sku', sku);
+      tr.innerHTML = `
+        <td>${sku}</td>
+        <td><input type="number" value="${quant}" min="1"></td>
+        <td><input type="number" step="0.01" value="${valor}"></td>
+        <td><button type="button" onclick="removeRow(this)">Remover</button></td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    // --- CSV Import Logic ---
+    const importBtn = document.getElementById('importCsvBtn');
+    const csvInput = document.getElementById('csvFile');
+
+    importBtn.addEventListener('click', () => csvInput.click());
+
+    csvInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const lines = e.target.result.split(/\r?\n/).filter(l => l.trim().length > 0);
+            for (let line of lines) {
+                const parts = line.split(',').map(p => p.trim());
+                if (parts.length < 3) continue;
+
+                const sku = parts[0];
+                const quant = parseInt(parts[1], 10) || 0;
+                const valor = parseFloat(parts[2]) || -1.0;
+
+                if (!sku) continue;
+                fetchAndAddProduto(sku, quant, valor);
+            }
+        };
+        reader.readAsText(file, 'UTF-8');
+        this.value = ''; // Reset for future imports
+    });
+
+    // --- Form Submit ---
+    document.getElementById('romForm').addEventListener('submit', function(e) {
+      var produtos = [];
+      document.querySelectorAll('#produtosTable tbody tr').forEach(tr => {
+        var sku = tr.getAttribute('data-sku');
+        var inputs = tr.querySelectorAll('input[type="number"]');
+        var quant = parseInt(inputs[0].value, 10) || 0;
+        var valor = parseFloat(inputs[1].value) || 0.0;
+        produtos.push({ sku, quantidade: quant, valor_unidade: valor });
+      });
+      document.getElementById('produtosJson').value = JSON.stringify(produtos);
+    });
+</script>
+</body>
+</html>

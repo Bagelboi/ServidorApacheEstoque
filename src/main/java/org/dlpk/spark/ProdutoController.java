@@ -17,6 +17,7 @@ import org.dlpk.objects.Cristal;
 import org.dlpk.objects.Produto;
 
 import javax.servlet.http.Part;
+import javax.swing.text.html.Option;
 
 public class ProdutoController {
 
@@ -24,7 +25,7 @@ public class ProdutoController {
 
     public void setupRoutes() {
                 // Get produto by SKU
-        get("/produto/:sku", (req, res) -> {
+        get("/produto/sku/:sku", (req, res) -> {
             String sku = req.params("sku");
             Optional<?> produto = findProduto(sku);
             Map<String, Object> model = new HashMap<>();
@@ -32,6 +33,28 @@ public class ProdutoController {
                 Produto p = (Produto) produto.get();
                 model.put("exists", true);
                 model.put("sku", p.getSku());
+                model.put("ean", p.getEan());
+                model.put("nome", p.getTitulo());
+                model.put("estoque", p.getEstoque());
+                model.put("peso", p.getPeso());
+                model.put("precoPadrao", p.getPrecoPadrao());
+            } else {
+                model.put("exists", false);
+            }
+            res.type("application/json");
+            return gson.toJson(model);
+        });
+
+
+        get("/produto/ean/:ean", (req, res) -> {
+            String ean = req.params("ean");
+            Optional<?> produto = findProdutoByEAN(ean);
+            Map<String, Object> model = new HashMap<>();
+            if (produto.isPresent()) {
+                Produto p = (Produto) produto.get();
+                model.put("exists", true);
+                model.put("sku", p.getSku());
+                model.put("ean", p.getEan());
                 model.put("nome", p.getTitulo());
                 model.put("estoque", p.getEstoque());
                 model.put("peso", p.getPeso());
@@ -44,7 +67,6 @@ public class ProdutoController {
         });
     }
 
- 
     public void addEstoque(String sku, Integer estoque_novo) {
         if (sku.startsWith("FU")) {
             RepositorySingleton.jdbi.useExtension(ColecionavelRepo.class, dao -> dao.updateEstoque(sku, estoque_novo));
@@ -79,6 +101,15 @@ public class ProdutoController {
             produto = RepositorySingleton.jdbi.withExtension(CristalRepo.class, dao -> dao.findBySku(EAN));
 
         return produto;
+    }
+
+    public String getProdutoEAN(String sku) {
+        Optional<?> p = findProduto(sku);
+        if (p.isPresent()) {
+            System.out.println( ((Produto) p.get()).getEan() );
+            return ((Produto) p.get()).getEan();
+        }
+        return "";
     }
 
 }

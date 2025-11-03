@@ -1,0 +1,173 @@
+<h2>Eventos de Conferência</h2>
+<table border="1" cellpadding="4" cellspacing="0">
+  <thead>
+    <tr>
+      <th>SKU</th>
+      <th>Data</th>
+      <th>Estoque Novo</th>
+      <th>Origem</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each eventos}}
+      <tr>
+        <td>{{sku}}</td>
+        <td>{{data}}</td>
+        <td>{{estoque_novo}}</td>
+        <td>{{origem}}</td>
+      </tr>
+    {{/each}}
+  </tbody>
+</table>
+
+<h2>Criar Conferência</h2>
+<div>
+  <label>SKU:</label>
+  <input id="sku-input" type="text" />
+  <button id="add-sku-btn">Adicionar SKU</button>
+</div>
+<div>
+  <label>EAN Scanner:</label>
+  <button id="ean-scanner-btn">Ativar Scanner</button>
+  <input id="ean-input" type="number" style="display: none;" />
+</div>
+
+<table id="creation-table" border="1" cellpadding="4" cellspacing="0">
+  <thead>
+    <tr>
+      <th>SKU</th>
+      <th>EAN</th>
+      <th>Estoque Velho</th>
+      <th>Estoque Novo</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{!-- Rows will be dynamically added here --}}
+  </tbody>
+</table>
+
+<div>
+  <label>Origem:</label>
+  <input id="origem-input" type="text" />
+</div>
+
+<div>
+  <button id="submit-conferencia-btn">Criar Conferência</button>
+</div>
+
+<script>
+  let scannerActive = false;
+
+  document.getElementById('add-sku-btn').addEventListener('click', async () => {
+    const sku = document.getElementById('sku-input').value.trim();
+    if (!sku) return;
+
+      // Check if SKU already exists in the table
+      const existingRow = Array.from(document.querySelectorAll('#creation-table tbody tr')).find(
+        row => row.children[0] && row.children[0].textContent === sku
+      );
+      if (existingRow) {
+        const estoqueNovoInput = existingRow.querySelector('.estoque-novo');
+        estoqueNovoInput.value = parseInt(estoqueNovoInput.value) + 1;
+        e.target.value = '';
+        return;
+      }
+
+    const response = await fetch(`/produto/sku/${sku}`);
+    if (response.ok) {
+      const produto = await response.json();
+      if (produto.exists) {
+        addRowToTable(produto.sku, produto.ean, produto.estoque, 0);
+      }
+    }
+  });
+
+  document.getElementById('ean-scanner-btn').addEventListener('click', () => {
+    scannerActive = !scannerActive;
+    const eanInput = document.getElementById('ean-input');
+    eanInput.style.display = scannerActive ? 'inline' : 'none';
+    if (!scannerActive) eanInput.value = '';
+  });
+
+  document.getElementById('ean-input').addEventListener('keydown', async (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const ean = e.target.value.trim();
+      if (!ean || ean == '') return;
+
+      // Check if EAN already exists in the table
+      const existingRow = Array.from(document.querySelectorAll('#creation-table tbody tr')).find(
+        row => row.children[1] && row.children[1].textContent === ean
+      );
+      if (existingRow) {
+        const estoqueNovoInput = existingRow.querySelector('.estoque-novo');
+        estoqueNovoInput.value = parseInt(estoqueNovoInput.value) + 1;
+        e.target.value = '';
+        return;
+      }
+
+      const response = await fetch(`/produto/ean/${ean}`);
+      if (response.ok) {
+        const produto = await response.json();
+        if (produto.exists) {
+          addRowToTable(produto.sku, produto.ean, produto.estoque, 0);
+          e.target.value = '';
+          return;
+        }
+      }
+
+      const skuResponse = await fetch(`/colecionaveis/getSkuFromEAN/${ean}`);
+      if (skuResponse.ok) {
+        const sku = await skuResponse.text();
+        const skuResponseData = await fetch(`/produto/sku/${sku}`);
+        if (skuResponseData.ok) {
+          const produto = await skuResponseData.json();
+          if (produto.exists) {
+            addRowToTable(produto.sku, produto.ean, produto.estoque, 0);
+            e.target.value = '';
+          }
+        }
+      }
+    }
+  });
+
+  document.getElementById('submit-conferencia-btn').addEventListener('click', async () => {
+    const rows = document.querySelectorAll('#creation-table tbody tr');
+    const origem = document.getElementById('origem-input').value.trim();
+    if (!origem) {
+      alert('Preencha o campo Origem.');
+      return;
+    }
+    const eventos = Array.from(rows).map(row => ({
+      sku: row.dataset.sku,
+      estoque_novo: parseInt(row.querySelector('.estoque-novo').value),
+      estoque_velho: parseInt(row.children[2].textContent),
+      origem: origem
+    }));
+
+    for (const evento of eventos) {
+      await fetch('/evento/conferencia/new', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(evento),
+      });
+    }
+
+    location.reload();
+  });
+
+  function addRowToTable(sku, ean, estoqueVelho, estoqueNovo) {
+    const tbody = document.querySelector('#creation-table tbody');
+    const row = document.createElement('tr');
+    row.dataset.sku = sku;
+
+    row.innerHTML = `
+      <td>${sku}</td>
+      <td>${ean}</td>
+      <td>${estoqueVelho}</td>
+      <td><input class="estoque-novo" type="number" min="0" value="${estoqueNovo}" /></td>
+    `;
+
+    tbody.appendChild(row);
+  }
+</script>
