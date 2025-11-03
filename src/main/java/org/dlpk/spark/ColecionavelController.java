@@ -43,8 +43,12 @@ public class ColecionavelController {
         });
 
         get("colecionaveis/getSkuFromEAN/:ean", (req, res) -> {
-            String ean = req.queryParams("ean");
-            String ean_to_sku = ean.substring(ean.length() - 6, ean.length() - 1);
+            String ean = req.params("ean");
+            if (ean.length() < 12) {
+                res.status(400);
+                return "EAN curto demais";
+            }
+            String ean_to_sku = "FU" + Integer.parseInt(ean.substring(ean.length() - 6, ean.length() - 1));
             Optional<Colecionavel> colecionavel = RepositorySingleton.jdbi.withExtension(ColecionavelRepo.class, dao -> dao.findBySku(ean_to_sku));
             if (colecionavel.isPresent()) {
                 RepositorySingleton.jdbi.useExtension(ColecionavelRepo.class, dao -> dao.updateEAN(ean_to_sku, ean)); //atualiza ean qualquer caso

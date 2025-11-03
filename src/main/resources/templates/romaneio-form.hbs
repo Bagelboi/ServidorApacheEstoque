@@ -155,53 +155,60 @@
     });
 
     document.getElementById('ean-input').addEventListener('keydown', async (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            const ean = e.target.value.trim();
-            if (!ean || ean == '') return;
+        if (e.key !== 'Enter') return;
 
-            // Check if EAN already exists in the table
-            const existingRow = Array.from(document.querySelectorAll('#produtosTable tbody tr')).find(
-                row => row.dataset.ean === ean
-            );
-            if (existingRow) {
-                const quantInput = existingRow.querySelector('input[type="number"]');
-                quantInput.value = parseInt(quantInput.value) + 1;
-                e.target.value = '';
-                return;
-            }
+        e.preventDefault();
+        const ean = e.target.value.trim();
+        if (!ean || ean == '') return;
 
-            // Try to fetch by EAN
-            let produto = null;
+        const tbody = document.querySelector('#produtosTable tbody');
+        const existingRow = Array.from(tbody.querySelectorAll('tr')).find(tr => tr.dataset.ean === ean);
+
+        if (existingRow) {
+            const quantInput = existingRow.querySelector('input[type="number"]');
+            quantInput.value = parseInt(quantInput.value) + 1;
+            e.target.value = '';
+            return;
+        }
+
+        try {
+            // Try produto endpoint
             let response = await fetch(`/produto/ean/${ean}`);
             if (response.ok) {
-                produto = await response.json();
-                if (produto && produto.sku) {
-                    fetchAndAddProduto(produto.sku, 1, -1, produto.ean);
+                const prod = await response.json();
+                if (prod?.sku) {
+                    fetchAndAddProduto(prod.sku, 1, -1, prod.ean);
                     e.target.value = '';
                     return;
                 }
             }
 
             // Try colecionaveis fallback
-            response = await fetch(`/colecionaveis/getSkuFromEAN/${ean}`);
-            if (response.ok) {
-                const sku = await response.text();
-                if (sku) {
-                    let prodResp = await fetch(`/produto/${sku}`);
-                    if (prodResp.ok) {
-                        produto = await prodResp.json();
-                        if (produto && produto.sku) {
-                            fetchAndAddProduto(produto.sku, 1, -1, produto.ean);
-                            e.target.value = '';
-                            return;
+            if (ean.length >= 12) {
+                response = await fetch(`/colecionaveis/getSkuFromEAN/${ean}`);
+                if (response.ok) {
+                    const sku = await response.text();
+                    if (sku) {
+                        const prodResp = await fetch(`/produto/${sku}`);
+                        if (prodResp.ok) {
+                            const prod = await prodResp.json();
+                            if (prod?.sku) {
+                                fetchAndAddProduto(prod.sku, 1, -1, prod.ean);
+                                e.target.value = '';
+                                return;
+                            }
                         }
                     }
                 }
             }
+
             alert('EAN não encontrado.');
+        } catch (err) {
+            console.error(err);
+            alert('Erro ao buscar EAN.');
         }
     });
+
 
     function fetchAndAddProduto(sku, quant, valor, eanFromScanner) {
         fetch(`/produto/sku/${sku}`)
@@ -224,18 +231,32 @@
             });
     }
 
+
     function addProdutoRow(sku, quant, valor, ean) {
         var tbody = document.querySelector('#produtosTable tbody');
-        // Try to match by SKU and EAN
-        var existing = Array.from(tbody.querySelectorAll('tr')).find(
-            tr => tr.getAttribute('data-sku') === sku && (ean != '' ? tr.getAttribute('data-ean') === String(ean) : true)
-        );
+
+        // Try to match by SKU (ignore EAN differences)
+        var existing = Array.from(tbody.querySelectorAll('tr')).find(tr => tr.dataset.sku === sku);
+
         if (existing) {
+            // Increment quantity
             var quantInput = existing.querySelector('input[type="number"]');
             quantInput.value = parseInt(quantInput.value) + quant;
+
+            // Update EAN if it's missing or different
+            if (ean && existing.dataset.ean !== ean) {
+                existing.dataset.ean = ean;
+                existing.querySelector('td:nth-child(2)').textContent = ean;
+            }
+
+            // Update value if needed (optional: only if valor > 0)
+            var valorInput = existing.querySelector('input[type="number"]:nth-child(2)');
+            if (valor > 0) valorInput.value = valor;
+
             return;
         }
 
+        // If no existing SKU, create new row
         var tr = document.createElement('tr');
         tr.setAttribute('data-sku', sku);
         tr.setAttribute('data-ean', ean || '');
@@ -248,6 +269,7 @@
         `;
         tbody.appendChild(tr);
     }
+
 
     // --- CSV Import Logic ---
     const importBtn = document.getElementById('importCsvBtn');

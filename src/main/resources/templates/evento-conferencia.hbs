@@ -89,47 +89,70 @@
     if (!scannerActive) eanInput.value = '';
   });
 
-  document.getElementById('ean-input').addEventListener('keydown', async (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      const ean = e.target.value.trim();
-      if (!ean || ean == '') return;
+    document.getElementById('ean-input').addEventListener('keydown', async (e) => {
+        if (e.key !== 'Enter') return;
 
-      // Check if EAN already exists in the table
-      const existingRow = Array.from(document.querySelectorAll('#creation-table tbody tr')).find(
-        row => row.children[1] && row.children[1].textContent === ean
-      );
-      if (existingRow) {
-        const estoqueNovoInput = existingRow.querySelector('.estoque-novo');
-        estoqueNovoInput.value = parseInt(estoqueNovoInput.value) + 1;
-        e.target.value = '';
-        return;
-      }
+        e.preventDefault();
+        const ean = e.target.value.trim();
+        if (!ean || ean == '') return;
 
-      const response = await fetch(`/produto/ean/${ean}`);
-      if (response.ok) {
-        const produto = await response.json();
-        if (produto.exists) {
-          addRowToTable(produto.sku, produto.ean, produto.estoque, 0);
-          e.target.value = '';
-          return;
-        }
-      }
+        const tbody = document.querySelector('#creation-table tbody');
 
-      const skuResponse = await fetch(`/colecionaveis/getSkuFromEAN/${ean}`);
-      if (skuResponse.ok) {
-        const sku = await skuResponse.text();
-        const skuResponseData = await fetch(`/produto/sku/${sku}`);
-        if (skuResponseData.ok) {
-          const produto = await skuResponseData.json();
-          if (produto.exists) {
-            addRowToTable(produto.sku, produto.ean, produto.estoque, 0);
+        // Try fetch produto by EAN
+        let produto;
+        try {
+            let response = await fetch(`/produto/ean/${ean}`);
+            if (response.ok) {
+                produto = await response.json();
+            }
+
+            // Fallback: colecionaveis lookup if EAN >= 12
+            if ((!produto || !produto.exists) && ean.length >= 12) {
+                response = await fetch(`/colecionaveis/getSkuFromEAN/${ean}`);
+                if (response.ok) {
+                    const sku = await response.text();
+                    if (sku) {
+                        const prodResp = await fetch(`/produto/sku/${sku}`);
+                        if (prodResp.ok) {
+                            produto = await prodResp.json();
+                        }
+                    }
+                }
+            }
+
+            if (!produto || !produto.exists) {
+                alert('EAN não encontrado.');
+                return;
+            }
+
+            // Check if SKU already exists in the table
+            const existingRow = Array.from(tbody.querySelectorAll('tr')).find(
+                row => row.dataset.sku === produto.sku
+            );
+
+            if (existingRow) {
+                // Increment Estoque Novo
+                const estoqueNovoInput = existingRow.querySelector('.estoque-novo');
+                estoqueNovoInput.value = parseInt(estoqueNovoInput.value) + 1;
+
+                // Update EAN if different
+                if (existingRow.children[1].textContent !== ean) {
+                    existingRow.children[1].textContent = ean;
+                }
+
+            } else {
+                // Add new row if SKU not in table
+                addRowToTable(produto.sku, produto.ean, produto.estoque, 0);
+            }
+
             e.target.value = '';
-          }
+        } catch (err) {
+            console.error(err);
+            alert('Erro ao buscar o EAN.');
         }
-      }
-    }
-  });
+    });
+
+
 
   document.getElementById('submit-conferencia-btn').addEventListener('click', async () => {
     const rows = document.querySelectorAll('#creation-table tbody tr');
