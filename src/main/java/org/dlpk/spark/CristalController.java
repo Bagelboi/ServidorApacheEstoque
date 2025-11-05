@@ -1,6 +1,7 @@
 package org.dlpk.spark;
 
 
+import com.opencsv.bean.CsvToBeanBuilder;
 import lombok.RequiredArgsConstructor;
 
 
@@ -13,6 +14,7 @@ import spark.Request;
 import spark.template.handlebars.HandlebarsTemplateEngine;
 
 import javax.servlet.http.Part;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.*;
@@ -21,9 +23,60 @@ import static spark.Spark.*;
 
 @RequiredArgsConstructor
 public class CristalController {
-
     public void setupRoutes() {
 
+        post("/cristais/import", (req, res) -> {
+
+            CsvHelper.prepRequest(req);
+            InputStream input =  CsvHelper.getInputStream(req);
+            if (input == null) {
+                res.status(400);
+                return "Erro na importação";
+            }
+            try (Reader reader = new InputStreamReader(input)) {
+
+                List<Cristal> cristais = new CsvToBeanBuilder<Cristal>(reader)
+                        .withType(Cristal.class)
+                        .withIgnoreLeadingWhiteSpace(true)
+                        .build()
+                        .parse();
+
+                RepositorySingleton.jdbi.useExtension(CristalRepo.class, dao -> {
+                    for (Cristal produto : cristais) {
+                        // Ensure SKU format
+                        if (!produto.getSku().startsWith("CR")) {
+                            produto.setSku("CR" + produto.getSku());
+                        }
+
+                        Optional<Cristal> existing = dao.findBySku(produto.getSku());
+                        if (existing.isPresent()) {
+                            dao.update(produto);
+                        } else {
+                            dao.insert(produto);
+                        }
+                    }
+                });
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                res.status(500);
+                return "Erro ao processar o arquivo CSV: " + e.getMessage();
+            }
+
+            res.redirect("/cristais");
+            return null;
+        });
+
+
+        get("/cristais/export", (req, res) -> {
+
+
+            List<Cristal> cristais = RepositorySingleton.jdbi.withExtension(
+                    CristalRepo.class, CristalRepo::findAll
+            );
+
+            return CsvHelper.exportRoute(cristais, req, res);
+        });
 
         // Show creation form
         get("/cristais/new", (req, res) -> {
@@ -101,12 +154,7 @@ public class CristalController {
 
     private Cristal extractCristal(Request req) {
         Cristal c = new Cristal();
-
-        c.setSku("CR" + req.queryParams("sku"));
-        c.setEan(req.queryParams("ean"));
-        c.setPeso(Float.parseFloat(req.queryParams( "peso") ));
-        c.setTitulo(req.queryParams("titulo"));
-        c.setEstoque(parseInt(req.queryParams("estoque")));
+        ProdutoController.extractProduto(req, "CR", c);
         //below are non product fields
         c.setCor(req.queryParams("cor"));
         c.setTamanho(req.queryParams("tamanho"));

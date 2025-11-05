@@ -18,6 +18,7 @@ import spark.template.handlebars.HandlebarsTemplateEngine;
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.http.Part;
 import javax.swing.text.html.Option;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Reader;
@@ -60,20 +61,13 @@ public class ColecionavelController {
 
         post("/colecionaveis/import", (req, res) -> {
 
-            String location = "/tmp"; // temp directory for file uploads
-            long maxFileSize = 10 * 1024 * 1024; // 10MB
-            long maxRequestSize = 20 * 1024 * 1024; // 20MB
-            int fileSizeThreshold = 1024 * 1024; // 1MB
-            MultipartConfigElement multipartConfig = new MultipartConfigElement(location, maxFileSize, maxRequestSize, fileSizeThreshold);
-            req.raw().setAttribute("org.eclipse.jetty.multipartConfig", multipartConfig);
-
-            Part filePart = req.raw().getPart("file");
-            if (filePart == null || filePart.getSize() == 0) {
+            CsvHelper.prepRequest(req);
+            InputStream input =  CsvHelper.getInputStream(req);
+            if (input == null) {
                 res.status(400);
-                return "Nenhum arquivo CSV enviado.";
+                return "Erro na importação";
             }
-
-            try (Reader reader = new InputStreamReader(filePart.getInputStream())) {
+            try (Reader reader = new InputStreamReader(input)) {
 
                 List<Colecionavel> colecionaveis = new CsvToBeanBuilder<Colecionavel>(reader)
                         .withType(Colecionavel.class)
@@ -109,27 +103,13 @@ public class ColecionavelController {
 
 
         get("/colecionaveis/export", (req, res) -> {
-            res.type("text/csv; charset=UTF-8"); // tell browser it's CSV text
+
 
             List<Colecionavel> colecionaveis = RepositorySingleton.jdbi.withExtension(
                     ColecionavelRepo.class, ColecionavelRepo::findAll
             );
 
-            try (PrintWriter writer = res.raw().getWriter()) {
-                StatefulBeanToCsv<Colecionavel> beanToCsv = new StatefulBeanToCsvBuilder<Colecionavel>(writer)
-                        .withSeparator(',')
-                        .withApplyQuotesToAll(false)
-                        .build();
-
-                beanToCsv.write(colecionaveis);
-                writer.flush(); // make sure all data is sent
-            } catch (Exception e) {
-                e.printStackTrace();
-                res.status(500);
-                return "Erro ao exportar colecionáveis: " + e.getMessage();
-            }
-
-            return null; // do NOT return anything else
+            return CsvHelper.exportRoute(colecionaveis, req, res);
         });
 
 
@@ -199,13 +179,8 @@ public class ColecionavelController {
 
     private Colecionavel extractColecionavel(Request req) {
         Colecionavel c = new Colecionavel();
-        c.setSku("FU" + req.queryParams("sku"));
-        c.setPeso(Float.parseFloat(req.queryParams( "peso") ));
-        c.setEan(req.queryParams("ean"));
-        c.setTitulo(req.queryParams("titulo"));
-        c.setEstoque(parseInt(req.queryParams("estoque")));
+        ProdutoController.extractProduto(req, "FU", c);
         c.setMarca(req.queryParams("marca"));
-        c.setPrecoPadrao(parseFloat(req.queryParams("precoPadrao")));
         return c;
     }
 

@@ -114,26 +114,12 @@ public class RomaneioController {
         post("/rom/lancar/:numero", (req, res) -> {
             int numero = Integer.parseInt(req.params("numero"));
             Romaneio rom = RepositorySingleton.jdbi.withExtension(RomaneioRepo.class, dao -> dao.findRomaneioByNumero(numero));
-            if (rom == null) { res.redirect("/rom"); return null; }
-            if (rom.isLancado()) { res.redirect("/rom"); return null; }
+            if (rom == null || rom.isLancado()) { res.redirect("/rom"); return null; }
 
             // set as lancado with today's date
             RepositorySingleton.jdbi.useExtension(RomaneioRepo.class, dao -> dao.lancarRomaneio(rom.getId(), LocalDate.now()));
 
-            // create events (deducao) and remove stock
-            Romaneio full = RepositorySingleton.jdbi.withExtension(RomaneioRepo.class, dao -> dao.getRomaneioWithProdutos(rom.getId()));
-            List<EventoEstoque> eventos = full.asEventoEstoque(EVENTO_ESTOQUE.DEDUCAO);
-            RepositorySingleton.jdbi.useExtension(EventoRepo.class, dao -> {
-                for (EventoEstoque ev : eventos) {
-                    dao.insertEstoque(ev);
-                }
-            });
-            // update product stocks
-            if (full.getProdutos() != null) {
-                for (RomaneioProduto p : full.getProdutos()) {
-                    produtoController.removeEstoque(p.getSku(), p.getQuantidade());
-                }
-            }
+            publishRomaneioToRepos(rom.getId(), EVENTO_ESTOQUE.DEDUCAO);
 
             res.redirect("/rom");
             return null;
@@ -143,23 +129,11 @@ public class RomaneioController {
         post("/rom/undo/:numero", (req, res) -> {
             int numero = Integer.parseInt(req.params("numero"));
             Romaneio rom = RepositorySingleton.jdbi.withExtension(RomaneioRepo.class, dao -> dao.findRomaneioByNumero(numero));
-            if (rom == null) { res.redirect("/rom"); return null; }
+            if (rom == null || !rom.isLancado()) { res.redirect("/rom"); return null; }
             // undo launch
             RepositorySingleton.jdbi.useExtension(RomaneioRepo.class, dao -> dao.undoRomaneio(rom.getId()));
 
-            Romaneio full = RepositorySingleton.jdbi.withExtension(RomaneioRepo.class, dao -> dao.getRomaneioWithProdutos(rom.getId()));
-            List<EventoEstoque> eventos = full.asEventoEstoque(EVENTO_ESTOQUE.ADICAO);
-            RepositorySingleton.jdbi.useExtension(EventoRepo.class, dao -> {
-                for (EventoEstoque ev : eventos) {
-                    dao.insertEstoque(ev);
-                }
-            });
-            // restore stock
-            if (full.getProdutos() != null) {
-                for (RomaneioProduto p : full.getProdutos()) {
-                    produtoController.addEstoque(p.getSku(), p.getQuantidade());
-                }
-            }
+            publishRomaneioToRepos(rom.getId(), EVENTO_ESTOQUE.ADICAO);
 
             res.redirect("/rom");
             return null;
@@ -288,8 +262,7 @@ public class RomaneioController {
         String produtosJson = req.queryParams("produtosJson");
         if (produtosJson != null && !produtosJson.isEmpty()) {
             try {
-                Gson gson = new Gson();
-                RomaneioProduto[] produtosArray = gson.fromJson(produtosJson, RomaneioProduto[].class);
+                RomaneioProduto[] produtosArray = new Gson().fromJson(produtosJson, RomaneioProduto[].class);
                 r.setProdutos(Arrays.asList(produtosArray));
             } catch (Exception e) {
                 r.setProdutos(new ArrayList<>()); // fallback empty
@@ -301,6 +274,26 @@ public class RomaneioController {
         return r;
     }
 
+
+    private void publishRomaneioToRepos(Integer rom_id, EVENTO_ESTOQUE evento) {
+        //create events
+        Romaneio full = RepositorySingleton.jdbi.withExtension(RomaneioRepo.class, dao -> dao.getRomaneioWithProdutos(rom_id));
+        List<EventoEstoque> eventos = full.asEventoEstoque(evento);
+        RepositorySingleton.jdbi.useExtension(EventoRepo.class, dao -> {
+            for (EventoEstoque ev : eventos) {
+                dao.insertEstoque(ev);
+            }
+        });
+        // modify stocks
+        if (full.getProdutos() != null) {
+            for (RomaneioProduto p : full.getProdutos()) {
+                if (evento == EVENTO_ESTOQUE.ADICAO)
+                    produtoController.addEstoque(p.getSku(), p.getQuantidade());
+                else if (evento == EVENTO_ESTOQUE.DEDUCAO)
+                    produtoController.removeEstoque(p.getSku(), p.getQuantidade());
+            }
+        }
+    }
 
     private Integer parseIntOrNull(String s) {
         try {
