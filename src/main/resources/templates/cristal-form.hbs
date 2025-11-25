@@ -26,16 +26,17 @@
     <input type="number" id="estoque" name="estoque" value="{{cristal.estoque}}" min="0" {{#if cristal}}readonly{{/if}}>
     <br>
 
+    <!-- COR -->
     <label for="cor">Cor:</label>
-    <input type="text" id="cor" name="cor" value="{{cristal.cor}}">
+    <select id="cor" name="cor"></select>
     <br>
 
+    <!-- TAMANHO -->
     <label for="tamanho">Tamanho:</label>
-    <input type="text" id="tamanho" name="tamanho" value="{{cristal.tamanho}}">
+    <select id="tamanho" name="tamanho"></select>
     <br>
 
-
-    <label for="peso">Peso:</label>
+    <label for="peso">Peso(g):</label>
     <input type="number" step=".001" min="0" id="peso" name="peso" value="{{cristal.peso}}">
     <br>
 
@@ -51,6 +52,47 @@
 </form>
 
 <a href="/cristais">Voltar à lista</a>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+    const cores = ["Crystal","Jet","White Opal","Black Diamond","Smoked Sapphire","Aquamarine","Aqua Bohemica","Turquoise","Light Sapphire","Light Sapphire Opal","Sapphire","Dark Indigo","Montana","Deep Sea","Indicolite","Blue Zircon","Chrysolite","Peridot","Emerald","Erinite","Jonquil","Citrine","Light Topaz","Topaz","Light Colorado Topaz","Smoked Topaz","Light Gold Quartz","Gold Quartz","Light Peach","Vintage Rose","Rose Opal","Light Rose","Rose","Fuchsia","Ruby","Sun","Padparadscha","Light Siam","Red Velvet","Siam","Burgundy","Amethyst","Amethyst Opal","Light Amethyst","Violet","Tanzanite",
+    "Crystal AB","Crystal Argent Flare","Crystal Velvet","Crystal Honey","Crystal Golden Honey","Crystal Sunrise","Crystal Aurum","Crystal Monte Carlo","Crystal Capri Gold","Crystal Apricot","Crystal Vitrail Light","Crystal Vitrail Medium","Crystal Peacock Green","Crystal Bermuda Blue","Crystal Nightfall","Crystal Labrador","Jet Hematite"
+    ];
+
+
+    const tamanhos = [{ ss: "0000", pp: "0" },{ ss: "000", pp: "1" },{ ss: "00", pp: "2" },{ ss: "0", pp: "3" },{ ss: "1", pp: "4" },{ ss: "2", pp: "5" },{ ss: "2.5", pp: "6" },{ ss: "3", pp: "7" },{ ss: "3.5", pp: "8" },{ ss: "4", pp: "9" },{ ss: "4.5", pp: "10" },{ ss: "5", pp: "11" },{ ss: "5.5", pp: "12" },{ ss: "6", pp: "13" },{ ss: "6.5", pp: "14" },{ ss: "7", pp: "15" },{ ss: "7.5", pp: "16" },{ ss: "8", pp: "17" },{ ss: "8.5", pp: "18" },{ ss: "9", pp: "19" },{ ss: "9.5", pp: "20" },{ ss: "10", pp: "21" },{ ss: "11", pp: "22" },{ ss: "11.5", pp: "23" },{ ss: "12", pp: "24" },{ ss: "13", pp: "25" },{ ss: "13.5", pp: "26" },{ ss: "14", pp: "27" },{ ss: "14.5", pp: "28" },{ ss: "15", pp: "29" },{ ss: "15.5", pp: "30" },{ ss: "16", pp: "31" },{ ss: "17", pp: "32" },
+    { ss: "18", pp: "" },{ ss: "19", pp: "" },{ ss: "20", pp: "" },{ ss: "21", pp: "" },{ ss: "22", pp: "" },{ ss: "23", pp: "" },{ ss: "24", pp: "" },{ ss: "25", pp: "" },{ ss: "26", pp: "" },{ ss: "27", pp: "" },{ ss: "28", pp: "" },{ ss: "29", pp: "" },{ ss: "34", pp: "" },{ ss: "35", pp: "" },{ ss: "38", pp: "" },{ ss: "39", pp: "" },{ ss: "40", pp: "" },{ ss: "45", pp: "" },{ ss: "47", pp: "" },{ ss: "48", pp: "" },{ ss: "50", pp: "" }
+    ];
+
+
+    const selectCor = document.querySelector("#cor");
+    const selectTamanho = document.querySelector("#tamanho");
+
+    /* fill colors */
+    cores.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
+        selectCor.appendChild(opt);
+    });
+
+    /* fill sizes */
+    tamanhos.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t.ss;
+        opt.textContent = `ss${t.ss} / pp${t.pp}`;
+        selectTamanho.appendChild(opt);
+    });
+
+    /* auto-select if editing */
+    const currentCor = "{{cristal.cor}}";
+    const currentTamanho = "{{cristal.tamanho}}";
+
+    if (currentCor) selectCor.value = currentCor;
+    if (currentTamanho) selectTamanho.value = currentTamanho;
+
+});
+</script>
 
 </body>
 </html>

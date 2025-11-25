@@ -51,7 +51,7 @@ public class ColecionavelController {
             }
             String ean_to_sku = "FU" + Integer.parseInt(ean.substring(ean.length() - 6, ean.length() - 1));
             Optional<Colecionavel> colecionavel = RepositorySingleton.jdbi.withExtension(ColecionavelRepo.class, dao -> dao.findBySku(ean_to_sku));
-            if (colecionavel.isPresent()) {
+            if (colecionavel.isPresent() && canBeFromEan(colecionavel.get())) {
                 RepositorySingleton.jdbi.useExtension(ColecionavelRepo.class, dao -> dao.updateEAN(ean_to_sku, ean)); //atualiza ean qualquer caso
                 return ean_to_sku;
             }
@@ -195,5 +195,9 @@ public class ColecionavelController {
 
     private String render(Map<String, Object> model, String templatePath) {
         return new HandlebarsTemplateEngine().render(new ModelAndView(model, templatePath));
+    }
+
+    private boolean canBeFromEan(Colecionavel col) {
+        return col.getMarca().trim().equals("Funko");
     }
 }

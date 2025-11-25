@@ -1,6 +1,9 @@
 {{! ...existing code... }}
 <head>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/2.3.5/css/dataTables.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+    <script src="//cdn.datatables.net/2.3.5/js/dataTables.min.js"></script>
 </head>
 <body>
 <h2>Criar Evento de Estoque</h2>
@@ -132,7 +135,7 @@
 <hr />
 
 <h2>Eventos de Estoque</h2>
-<table border="1" cellpadding="4" cellspacing="0">
+<table id="eventTable">
     <thead>
     <tr>
         <th>ID</th>
@@ -156,5 +159,7 @@
     {{/each}}
     </tbody>
 </table>
-{{! ...existing code... }}
+<script>
+    new DataTable("#eventTable")
+</script>
 </body>

@@ -1,3 +1,9 @@
+<head>
+    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/2.3.5/css/dataTables.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+    <script src="//cdn.datatables.net/2.3.5/js/dataTables.min.js"></script>
+</head>
+<body>
 <h1>Lista de Cristais</h1>
 
 <!-- CSV import form -->
@@ -17,7 +23,7 @@
 </a>
 
 <a href="/cristais/new">Novo Cristal</a>
-<table border="1" cellpadding="5">
+<table id="prodTable">
     <thead>
         <tr>
             <th>SKU</th>
@@ -40,7 +46,7 @@
             <td>{{titulo}}</td>
             <td>{{estoque}}</td>
             <td>{{cor}}</td>
-            <td>{{tamanho}}</td>
+            <td>ss{{tamanho}}</td>
             <td>{{peso}}</td>
             <td>{{precoPadrao}}</td>
             <td>{{descricao}}</td>
@@ -54,3 +60,7 @@
         {{/each}}
     </tbody>
 </table>
+<script>
+    new DataTable("#prodTable")
+</script>
+</body>

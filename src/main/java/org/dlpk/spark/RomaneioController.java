@@ -261,11 +261,22 @@ public class RomaneioController {
         r.setVendedor(req.queryParams("vendedor"));
         r.setOc(req.queryParams("oc"));
         r.setNotaFiscal(parseIntOrNull(req.queryParams("notaFiscal")));
-        r.setCondPagamento(COND_PAGAMENTO.valueOf( req.queryParams("condPagamento") ) );
+
         r.setDescontoValorTotal(parseFloatOrNull(req.queryParams("descontoValorTotal")));
         r.setObservacoes(req.queryParams("observacoes"));
         r.setLancado(false);
-        r.setTransporte(TRANSPORTE.valueOf( req.queryParams("transporte") ) );
+
+        //Enums
+        try {
+            r.setTransporte(TRANSPORTE.valueOf( req.queryParams("transporte") ) );
+        } catch(IllegalArgumentException | NullPointerException e) {
+            r.setTransporte(TRANSPORTE.OUTROS);
+        }
+        try {
+            r.setCondPagamento(COND_PAGAMENTO.valueOf(req.queryParams("condPagamento")));
+        } catch(IllegalArgumentException | NullPointerException e) {
+            r.setCondPagamento(COND_PAGAMENTO.OUTROS);
+        }
 
         // --- NEW: parse produtos from JSON ---
         String produtosJson = req.queryParams("produtosJson");
