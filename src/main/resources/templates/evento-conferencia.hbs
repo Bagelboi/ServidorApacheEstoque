@@ -1,3 +1,7 @@
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+</head>
+<body>
 <h2>Eventos de Conferência</h2>
 <table border="1" cellpadding="4" cellspacing="0">
   <thead>
@@ -55,7 +59,9 @@
   <button id="submit-conferencia-btn">Criar Conferência</button>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
 <script>
+  var notyf = new Notyf();
   let scannerActive = false;
 
   document.getElementById('add-sku-btn').addEventListener('click', async () => {
@@ -112,6 +118,7 @@
                 if (response.ok) {
                     const sku = await response.text();
                     if (sku) {
+                        notyf.success(`${sku} atualizado com EAN novo`)
                         const prodResp = await fetch(`/produto/sku/${sku}`);
                         if (prodResp.ok) {
                             produto = await prodResp.json();
@@ -121,7 +128,7 @@
             }
 
             if (!produto || !produto.exists) {
-                alert('EAN não encontrado.');
+                notyf.error('EAN não encontrado.');
                 return;
             }
 
@@ -148,7 +155,7 @@
             e.target.value = '';
         } catch (err) {
             console.error(err);
-            alert('Erro ao buscar o EAN.');
+            notyf.error('Erro ao buscar o EAN.');
         }
     });
 
@@ -157,8 +164,8 @@
   document.getElementById('submit-conferencia-btn').addEventListener('click', async () => {
     const rows = document.querySelectorAll('#creation-table tbody tr');
     const origem = document.getElementById('origem-input').value.trim();
-    if (!origem) {
-      alert('Preencha o campo Origem.');
+    if (!origem || origem.length < 1) {
+      notyf.error('Preencha o campo Origem.');
       return;
     }
     const eventos = Array.from(rows).map(row => ({
@@ -194,3 +201,4 @@
     tbody.appendChild(row);
   }
 </script>
+</body>

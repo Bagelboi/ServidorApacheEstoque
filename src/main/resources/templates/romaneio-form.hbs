@@ -9,16 +9,17 @@
         th, td { border: 1px solid #ccc; padding: 6px; }
         .btn { padding: 6px 10px; margin: 4px; }
     </style>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+    <script src="https://parsleyjs.org/dist/parsley.min.js"></script>
+    <script src="/parsley_brasil.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
 </head>
 <body>
 <h1>{{buttonText}}</h1>
 
-<form id="romForm" method="post" action="{{action}}">
-    <!-- ... existing fields ... -->
-
-    <form id="romForm" method="post" action="{{action}}">
+<form id="romForm" method="post" action="{{action}}" data-parsley-validate>
         <label>Nº Romaneio
-            <input name="numeroRomaneio" type="number" value="{{romaneio.numeroRomaneio}}">
+            <input name="numeroRomaneio" min="0" type="number" value="{{romaneio.numeroRomaneio}}" required>
         </label>
 
         <label>Data emissão
@@ -30,7 +31,7 @@
         </label>
 
         <label>Destinatário (documento)
-            <input name="destinatarioDocumento" type="text" value="{{romaneio.destinatarioDocumento}}">
+            <input name="destinatarioDocumento" type="text" data-parsley-cpfcnpj required value="{{romaneio.destinatarioDocumento}}">
         </label>
 
         <label>Contato
@@ -43,8 +44,9 @@
 
         <label>Transporte:
             <select name="transporte">
-                <option value="SEDEX">SEDEX</option>
-                <option value="JAMEF">Jamef</option>
+                {{#each transportes}}
+                    <option value="{{name}}" {{selected}}>{{name}}</option>
+                {{/each}}
             </select>
         </label>
 
@@ -61,11 +63,15 @@
         </label>
 
         <label>Condição de pagamento
-            <input name="condPagamento" type="text" value="{{romaneio.condPagamento}}">
+            <select name="condPagamento">
+                {{#each condPagamentos}}
+                    <option value="{{name}}" {{selected}}>{{name}}</option>
+                {{/each}}
+            </select>
         </label>
 
         <label>Desconto valor total
-            <input name="descontoValorTotal" type="number" step="0.01" value="{{romaneio.descontoValorTotal}}">
+            <input name="descontoValorTotal" min="0" type="number" step=".01" value="{{romaneio.descontoValorTotal}}">
         </label>
 
         <label>Observações
@@ -90,7 +96,7 @@
                 <td>{{sku}}</td>
                 <td>{{ean}}</td>
                 <td><input type="number" value="{{quantidade}}" min="1"></td>
-                <td><input type="number" step="0.01" value="{{valor_unidade}}"></td>
+                <td><input type="number" step=".01" value="{{valor_unidade}}"></td>
                 <td><button type="button" onclick="removeRow(this)">Remover</button></td>
             </tr>
         {{/each}}
@@ -100,7 +106,7 @@
     <p>
         <input id="newSku" placeholder="SKU (ex: FU123)" type="text">
         <input id="newQuant" placeholder="Quantidade" type="number" value="1" min="1">
-        <input id="newValor" placeholder="Valor unit." type="number" step="0.01" value="-1.00">
+        <input id="newValor" placeholder="Valor unit." type="number" step=".01" value="-1.00">
         <button id="addProduto" type="button" class="btn">Adicionar produto</button>
     </p>
 
@@ -115,6 +121,11 @@
         <input type="file" id="csvFile" accept=".csv" style="display:none">
         <button id="importCsvBtn" type="button" class="btn">Importar Produtos em Massa (sku, quantidade, valor)</button>
     </p>
+    <!-- Export CSV Button -->
+    <p>
+        <button id="exportCsvBtn" type="button" class="btn">Baixar Template</button>
+    </p>
+
 
     <!-- Hidden input to submit JSON of produtos -->
     <input type="hidden" name="produtosJson" id="produtosJson">
@@ -125,14 +136,17 @@
     </p>
 </form>
 
+<script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
 <script>
+    var notyf = new Notyf();
+
     function removeRow(btn) {
       btn.closest('tr').remove();
     }
 
     document.getElementById('addProduto').addEventListener('click', function() {
         var sku = document.getElementById('newSku').value.trim();
-        if (!sku) { alert('Informe um SKU.'); return; }
+        if (!sku) { notyf.error('Informe um SKU.'); return; }
         var quant = parseInt(document.getElementById('newQuant').value, 10) || 0;
         var valor = parseFloat(document.getElementById('newValor').value);
         if (isNaN(valor)) valor = 0.0;
@@ -189,6 +203,7 @@
                 if (response.ok) {
                     const sku = await response.text();
                     if (sku) {
+                        notyf.success(`${sku} atualizado com EAN novo`)
                         const prodResp = await fetch(`/produto/${sku}`);
                         if (prodResp.ok) {
                             const prod = await prodResp.json();
@@ -202,10 +217,9 @@
                 }
             }
 
-            alert('EAN não encontrado.');
         } catch (err) {
             console.error(err);
-            alert('Erro ao buscar EAN.');
+            notyf.error('Erro ao buscar EAN.');
         }
     });
 
@@ -221,13 +235,13 @@
 
                 if (valor < 0) {
                     if (prod.precoPadrao != null) valor = prod.precoPadrao;
-                    else alert('Preço padrão não encontrado para este SKU. Usando -1.');
+                    else notyf.success('Preço padrão não encontrado para este SKU. Usando -1.');
                 }
                 addProdutoRow(sku, quant, valor, eanFromScanner || prod.ean || '');
             })
             .catch(() => {
                 if (/^(FU|CR)/.test(sku)) return;
-                alert(`Produto ${sku} não encontrado no banco de dados.`);
+                notyf.error(`Produto ${sku} não encontrado no banco de dados.`);
             });
     }
 
@@ -270,6 +284,27 @@
         tbody.appendChild(tr);
     }
 
+        // --- CSV Export Logic ---
+    document.getElementById('exportCsvBtn').addEventListener('click', function () {
+        const rows = [];
+        rows.push(["sku", "quantidade", "valor"].join(",")); // header
+
+        const csvContent = rows.join("\n")
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+
+        // Create & click link
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "produtos_romaneio_template.csv";
+        a.style.display = "none";
+        document.body.appendChild(a);
+        a.click();
+
+        // Cleanup
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
 
     // --- CSV Import Logic ---
     const importBtn = document.getElementById('importCsvBtn');
@@ -284,7 +319,8 @@
         const reader = new FileReader();
         reader.onload = function(e) {
             const lines = e.target.result.split(/\r?\n/).filter(l => l.trim().length > 0);
-            for (let line of lines) {
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i];
                 const parts = line.split(',').map(p => p.trim());
                 if (parts.length < 3) continue;
 
@@ -314,5 +350,6 @@
       document.getElementById('produtosJson').value = JSON.stringify(produtos);
     });
 </script>
+
 </body>
 </html>

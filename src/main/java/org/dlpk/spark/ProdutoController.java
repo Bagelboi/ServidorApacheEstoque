@@ -106,7 +106,11 @@ public class ProdutoController {
     }
 
     public static void extractProduto(Request req, String sku_pre, Produto c) {
-        c.setSku(sku_pre + req.queryParams("sku"));
+        String q_sku = req.queryParams("sku");
+        if (q_sku.startsWith(sku_pre))
+            c.setSku(q_sku);
+        else
+            c.setSku(sku_pre + q_sku);
         c.setPeso(parseFloat(req.queryParams( "peso") ));
         c.setEan(req.queryParams("ean"));
         c.setTitulo(req.queryParams("titulo"));

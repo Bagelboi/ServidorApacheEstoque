@@ -2,6 +2,7 @@ package org.dlpk.objects;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.dlpk.enums.COND_PAGAMENTO;
 import org.dlpk.enums.EVENTO_ESTOQUE;
 import org.dlpk.enums.TRANSPORTE;
 
@@ -29,7 +30,7 @@ public class Romaneio {
      String oc;
      Integer notaFiscal;
      LocalDate dataCriacao;
-     String condPagamento;
+     COND_PAGAMENTO condPagamento;
 
      Float descontoValorTotal;
      boolean lancado;

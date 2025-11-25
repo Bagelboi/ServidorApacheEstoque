@@ -10,6 +10,7 @@ import org.dlpk.database.CristalRepo;
 import org.dlpk.database.EventoRepo;
 import org.dlpk.database.RomaneioRepo;
 import org.dlpk.database.RepositorySingleton;
+import org.dlpk.enums.COND_PAGAMENTO;
 import org.dlpk.enums.TRANSPORTE;
 import org.dlpk.objects.EventoEstoque;
 import org.dlpk.objects.Produto;
@@ -21,6 +22,7 @@ import spark.ModelAndView;
 import spark.Request;
 import spark.template.handlebars.HandlebarsTemplateEngine;
 
+import java.lang.reflect.Array;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.*;
@@ -44,6 +46,8 @@ public class RomaneioController {
             Map<String, Object> model = new HashMap<>();
             model.put("action", "/rom");
             model.put("method", "post");
+            model.put( "transportes", montarEnums(Optional.empty()).get("transportes") );
+            model.put( "condPagamentos", montarEnums(Optional.empty()).get("condPagamentos") );
             model.put("buttonText", "Criar Romaneio");
             return render(model, "romaneio-form.hbs");
         });
@@ -106,6 +110,8 @@ public class RomaneioController {
             model.put("produtosDetalhados", produtoRows);
             model.put("pesoTotal", pesoTotal);
             model.put("precoTotal", precoTotal);
+            model.put( "transportes", montarEnums(Optional.of(rom)).get("transportes") );
+            model.put( "condPagamentos", montarEnums(Optional.of(rom)).get("condPagamentos") );
             return render(model, "romaneio-list.hbs");
         });
 
@@ -157,12 +163,15 @@ public class RomaneioController {
                 produtoMap.put("ean", produtoController.getProdutoEAN(p.getSku()));
                 produtosComEan.add(produtoMap);
             }
+
             Map<String, Object> model = new HashMap<>();
             model.put("action", "/rom/update/" + numero);
             model.put("method", "post");
             model.put("buttonText", "Atualizar Romaneio");
             model.put("romaneio", rom); // prefill form with existing rom data
             model.put("romaneioProdutosEAN", produtosComEan);
+            model.put( "transportes", montarEnums(Optional.of(rom)).get("transportes") );
+            model.put( "condPagamentos", montarEnums(Optional.of(rom)).get("condPagamentos") );
             return render(model, "romaneio-form.hbs");
         });
 
@@ -252,7 +261,7 @@ public class RomaneioController {
         r.setVendedor(req.queryParams("vendedor"));
         r.setOc(req.queryParams("oc"));
         r.setNotaFiscal(parseIntOrNull(req.queryParams("notaFiscal")));
-        r.setCondPagamento(req.queryParams("condPagamento"));
+        r.setCondPagamento(COND_PAGAMENTO.valueOf( req.queryParams("condPagamento") ) );
         r.setDescontoValorTotal(parseFloatOrNull(req.queryParams("descontoValorTotal")));
         r.setObservacoes(req.queryParams("observacoes"));
         r.setLancado(false);
@@ -309,6 +318,32 @@ public class RomaneioController {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private Map<String, List> montarEnums(Optional<Romaneio> romaneio) {
+        List<Map<String, String>> transportes = new ArrayList<>();
+        List<Map<String, String>> condPgtos = new ArrayList<>();
+
+        for (TRANSPORTE t : TRANSPORTE.values()) {
+            Map<String, String> item = new HashMap<>();
+            item.put("name", t.name());
+            if (romaneio.isPresent())
+                item.put("selected", (romaneio.get().getTransporte() == t) ? "selected" : "");
+            transportes.add(item);
+        }
+
+        for (COND_PAGAMENTO t : COND_PAGAMENTO.values()) {
+            Map<String, String> item = new HashMap<>();
+            item.put("name", t.name());
+            if (romaneio.isPresent())
+                item.put("selected", (romaneio.get().getCondPagamento() == t) ? "selected" : "");
+            condPgtos.add(item);
+        }
+
+        Map<String, List> model = new HashMap<>();
+        model.put("transportes",transportes);
+        model.put("condPagamentos",condPgtos);
+        return model;
     }
 
     private String render(Map<String, Object> model, String templatePath) {

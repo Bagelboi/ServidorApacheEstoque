@@ -1,4 +1,8 @@
 {{! ...existing code... }}
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+</head>
+<body>
 <h2>Criar Evento de Estoque</h2>
 <form method="post" action="/evento/estoque/new">
     <div>
@@ -19,11 +23,11 @@
     </div>
     <div>
         <label>Quantidade:</label>
-        <input name="quantidade" type="number" value="0" required />
+        <input name="quantidade" type="number" min="1" value="1" required />
     </div>
     <div>
         <label>Origem:</label>
-        <input name="origem" type="text" />
+        <input name="origem" type="text" required />
     </div>
     <div>
         <button type="submit">Criar Evento</button>
@@ -37,12 +41,17 @@
 <button id="importCsvBtn">Importar CSV</button>
 <p id="importStatus"></p>
 
+<button id="downloadTemplateBtn">Baixar Template</button>
+
+<script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
 <script>
+    var notyf = new Notyf();
+
     document.getElementById('importCsvBtn').addEventListener('click', async () => {
       const fileInput = document.getElementById('csvFile');
       const status = document.getElementById('importStatus');
       if (!fileInput.files.length) {
-        alert('Selecione um arquivo CSV primeiro.');
+        notyf.error('Selecione um arquivo CSV primeiro.');
         return;
       }
 
@@ -54,7 +63,7 @@
       const rows = text.trim().split(/\r?\n/).map(r => r.split(delimiter).map(c => c.trim()));
 
       if (rows.length < 2) {
-        alert('O arquivo CSV parece vazio ou inválido.');
+        notyf.error('O arquivo CSV parece vazio ou inválido.');
         return;
       }
 
@@ -99,9 +108,25 @@
       }
 
       status.textContent = `Importação concluída: ${successCount} sucesso(s), ${failCount} falha(s).`;
-      alert(status.textContent);
+      notyf.success(status.textContent);
       location.reload();
     });
+
+
+      document.getElementById('downloadTemplateBtn').addEventListener('click', () => {
+      const csvContent = "sku,data,tipo,quantidade,origem\n"
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = "template_eventos_estoque.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+  });
 </script>
 
 <hr />
@@ -132,3 +157,4 @@
     </tbody>
 </table>
 {{! ...existing code... }}
+</body>

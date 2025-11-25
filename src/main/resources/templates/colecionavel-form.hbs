@@ -1,12 +1,20 @@
+<!doctype html>
+<html>
+<head>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+    <script src="https://parsleyjs.org/dist/parsley.min.js"></script>
+</head>
+
+<body>
 <h1>{{buttonText}}</h1>
 
-<form action="{{action}}" method="{{method}}">
+<form action="{{action}}" method="{{method}}" data-parsley-validate>
     <label for="sku">SKU:</label>
     <input type="text" id="sku" name="sku" value="{{colecionavel.sku}}" {{#if colecionavel}}readonly{{/if}} required>
     <br>
 
     <label for="ean">EAN:</label>
-    <input type="text" id="ean" name="ean" value="{{colecionavel.ean}}" required>
+    <input type="text" id="ean" name="ean" value="{{colecionavel.ean}}" data-parsley-type="digits" data-parsley-pattern="\d{6,14}" required>
     <br>
 
     <label for="titulo">Título:</label>
@@ -19,18 +27,21 @@
 
 
     <label for="precoPadrao">Preço Padrão:</label>
-    <input type="text" id="precoPadrao" min="0" name="precoPadrao" value="{{colecionavel.precoPadrao}}">
+    <input type="number" step=".01" id="precoPadrao" min="0" name="precoPadrao" value="{{colecionavel.precoPadrao}}">
     <br>
 
     <label for="peso">Peso:</label>
-    <input type="text" id="peso" name="peso" value="{{colecionavel.peso}}">
+    <input type="number" step=".001" min="0" id="peso" name="peso" value="{{colecionavel.peso}}">
     <br>
 
     <label for="marca">Marca:</label>
-    <input type="marca" id="marca" name="marca" value="{{colecionavel.marca}}">
+    <input type="text" id="marca" name="marca" value="{{colecionavel.marca}}">
     <br>
 
     <button type="submit">{{buttonText}}</button>
 </form>
 
 <a href="/colecionaveis">Voltar à lista</a>
+
+</body>
+</html>

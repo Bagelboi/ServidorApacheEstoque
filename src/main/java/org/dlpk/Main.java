@@ -29,6 +29,7 @@ public class Main {
     }
     public static void main(String[] args) throws GeneralSecurityException, IOException {
         port(4567);
+        staticFiles.location("/public");
         get("/", (req, res) -> {
             Map<String, Object> model = new HashMap<>();
             return new ModelAndView(model, "index.hbs");

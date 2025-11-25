@@ -148,6 +148,7 @@ public class ColecionavelController {
         // Handle edit submission
         post("/colecionaveis/update/:sku", (req, res) -> {
             Colecionavel colecionavel = extractColecionavel(req);
+            System.out.println(colecionavel.getSku());
             RepositorySingleton.jdbi.useExtension(ColecionavelRepo.class, dao -> dao.update(colecionavel));
             res.redirect("/colecionaveis");
             return null;
